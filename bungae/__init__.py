@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import os
 import secrets
 from datetime import timedelta
@@ -40,7 +42,14 @@ def _secret_key(on_vercel):
     if key:
         return key
     if on_vercel:
-        raise RuntimeError("Vercel 환경 변수에 SECRET_KEY를 설정해야 합니다. (실행방법.md 참고)")
+        # SECRET_KEY를 따로 넣지 않았으면 DB 접속 주소에서 만든다. 접속 주소에는 DB 서비스가 만든 긴 무작위
+        # 비밀번호가 들어 있어 추측할 수 없고, 모든 인스턴스가 같은 값을 얻으므로 로그인 쿠키가 서로 통한다.
+        # (HMAC이라 이 키에서 접속 주소를 거꾸로 알아낼 수는 없다.)
+        database_url = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+        if database_url:
+            return hmac.new(database_url.encode(), b"bungae-patgu session key", hashlib.sha256).hexdigest()
+        # DB도 연결하지 않은 임시 실행: 인스턴스마다 다른 키라 로그인이 자주 풀린다(화면에 경고가 함께 뜬다).
+        return secrets.token_hex(32)
     path = BASE_DIR / "instance" / "secret_key"
     path.parent.mkdir(exist_ok=True)
     if not path.exists():

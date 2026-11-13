@@ -73,6 +73,19 @@ def _ensure_tables(app, on_vercel):
         app.logger.exception("테이블 확인 실패: DB 연결 설정을 확인하세요")
 
 
+def _seed_demo(app):
+    """예시 모임이 모자라면 채운다. 실패해도 서비스는 떠야 하므로 오류는 기록만 한다."""
+    from .demo import auto_seed
+
+    try:
+        made = auto_seed()
+        if made:
+            app.logger.warning("예시 모임 %d개를 새로 만들었습니다(SEED_DEMO)", made)
+    except SQLAlchemyError:
+        db.session.rollback()
+        app.logger.exception("예시 데이터 생성 실패")
+
+
 def create_app(test_config=None):
     try:
         from dotenv import load_dotenv
@@ -107,10 +120,13 @@ def create_app(test_config=None):
         or "recursive/flint-v1.0:free,baidu/ernie-5.5-flash-preview:free",
         CHAT_AI_DAILY_LIMIT=int(os.environ.get("CHAT_AI_DAILY_LIMIT") or 15),
         EPHEMERAL_DB=False,
+        SEED_DEMO=False,
     )
     if test_config:
         app.config.update(test_config)
     else:
+        # 시연용 예시 모임을 서버가 스스로 채우게 하는 스위치. 비밀 값이 아니라 켜고 끄는 값이다.
+        app.config["SEED_DEMO"] = os.environ.get("SEED_DEMO", "").strip() == "1"
         app.config["SECRET_KEY"] = _secret_key(on_vercel)
         uri, ephemeral = _database_url(on_vercel)
         app.config["SQLALCHEMY_DATABASE_URI"] = uri
@@ -161,6 +177,8 @@ def create_app(test_config=None):
 
     with app.app_context():
         _ensure_tables(app, on_vercel)
+        if app.config["SEED_DEMO"]:
+            _seed_demo(app)
 
     @app.before_request
     def reject_nul_bytes():

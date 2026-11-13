@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% from "_macros.html" import meeting_card with context %}
+{% block title %}홈 · 번개팟구{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="hero__hello">{{ user.nickname }}님, 반가워요 👋</p>
+  {% if filtered %}
+  <h1 class="hero__title">조건에 맞는 번개가 {% if meetings %}<span class="hero__num">{{ meetings|length }}개</span> 있어요{% else %}없어요{% endif %}</h1>
+  {% elif total_open %}
+  <h1 class="hero__title">지금 참여할 수 있는 번개가 <span class="hero__num">{{ total_open }}개</span> 있어요</h1>
+  {% elif any_upcoming %}
+  <h1 class="hero__title">새로 참여할 수 있는 번개는 지금 없어요.<br>하나 더 열어 볼까요?</h1>
+  {% else %}
+  <h1 class="hero__title">지금 예정된 번개가 없어요.<br>하나 열어 볼까요?</h1>
+  {% endif %}
+</section>
+
+{% for meeting in ongoing %}
+<a class="soon-banner" href="{{ url_for('meetings.detail', meeting_id=meeting.id) }}">🟢 지금 진행 중 · {{ meeting.title }} ({{ meeting.place }})</a>
+{% endfor %}
+{% for meeting in starting_soon %}
+<a class="soon-banner" href="{{ url_for('meetings.detail', meeting_id=meeting.id) }}">⏰ 곧 시작해요 · {{ meeting.title }} ({{ meeting|relative }}, {{ meeting.place }})</a>
+{% endfor %}
+
+{% if not user.interest_list and not filtered and not starting_soon and not ongoing %}
+<p class="hint-card">💡 관심사를 골라 두면 맞는 번개를 먼저 추천해 드려요. <a href="{{ url_for('meetings.me') }}#interests">내 모임에서 관심사 고르기</a></p>
+{% endif %}
+
+<form class="filters" method="get" action="{{ url_for('discover.home') }}" data-autosubmit role="search" aria-label="모임 찾기">
+  <div class="search">
+    <label class="sr-only" for="q">검색어</label>
+    <input class="input" type="search" id="q" name="q" value="{{ filters.q }}" placeholder="모임 이름, 태그, 장소 검색" maxlength="30">
+    <button class="btn btn--primary" type="submit">검색</button>
+  </div>
+
+  <fieldset>
+    <legend class="sr-only">활동 종류</legend>
+    <div class="chip-scroll">
+      <label class="chip-check">
+        <input type="radio" name="category" value=""{% if not filters.category %} checked{% endif %}>
+        <span class="chip">전체</span>
+      </label>
+      {% for key, label, emoji in CATEGORIES %}
+      <label class="chip-check">
+        <input type="radio" name="category" value="{{ key }}"{% if filters.category == key %} checked{% endif %}>
+        <span class="chip"><span aria-hidden="true">{{ emoji }}</span> {{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  {# 번개를 찾을 때 가장 자주 쓰는 두 조건은 접힌 메뉴 밖에 둔다. #}
+  <div class="chips">
+    <label class="chip-check">
+      <input type="checkbox" name="soon" value="1"{% if filters.soon %} checked{% endif %}>
+      <span class="chip">⏰ 2시간 안에 시작</span>
+    </label>
+    <label class="chip-check">
+      <input type="checkbox" name="open" value="1"{% if filters.open %} checked{% endif %}>
+      <span class="chip">🙋 참여 가능만</span>
+    </label>
+  </div>
+
+  <details class="filters__more"{% if filters.day or filters.part or filters.sort != 'soon' %} open{% endif %}>
+    <summary>날짜·시간대·정렬</summary>
+    <div class="filters__body">
+      <div class="field-grid">
+        <div class="field">
+          <label class="field__label" for="day">날짜</label>
+          <select class="select" id="day" name="day">
+            {% for value, label in day_options %}
+            <option value="{{ value }}"{% if filters.day == value %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__label" for="part">시간대</label>
+          <select class="select" id="part" name="part">
+            {% for value, label in part_options %}
+            <option value="{{ value }}"{% if filters.part == value %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field__label" for="sort">정렬</label>
+        <select class="select" id="sort" name="sort">
+          {% for value, label in sort_options %}
+          <option value="{{ value }}"{% if filters.sort == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filters__foot">
+        <button class="btn btn--soft btn--sm" type="submit">적용</button>
+      </div>
+    </div>
+  </details>
+
+  {% if filtered %}
+  <p><a class="reset-link" href="{{ url_for('discover.home') }}">필터 초기화</a></p>
+  {% endif %}
+</form>
+
+{% if for_you %}
+<section class="section for-you" aria-labelledby="for-you-title">
+  <div class="section__head">
+    <h2 class="section__title" id="for-you-title">⚡ 나를 위한 추천</h2>
+  </div>
+  <ul class="card-list">
+    {% for rec in for_you %}
+    {{ meeting_card(rec.meeting, rec.reasons) }}
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="section" aria-labelledby="list-title">
+  <div class="section__head">
+    <h2 class="section__title" id="list-title">{% if filtered %}검색 결과{% else %}다가오는 번개{% endif %}<span class="section__count">{{ meetings|length }}</span></h2>
+  </div>
+  {% if meetings %}
+  <ul class="card-list">
+    {% for meeting in meetings %}
+    {{ meeting_card(meeting) }}
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty">
+    <p class="empty__icon" aria-hidden="true">🌤️</p>
+    {% if filtered %}
+    <p class="empty__title">조건에 맞는 번개가 없어요</p>
+    <p class="empty__text">필터를 바꿔 보거나, 원하는 번개를 직접 열어 보세요.</p>
+    {% else %}
+    <p class="empty__title">아직 열린 번개가 없어요</p>
+    <p class="empty__text">먼저 번개를 열면 같이 할 사람이 모일 거예요.</p>
+    {% endif %}
+    <div class="empty__actions">
+      <a class="btn btn--primary" href="{{ url_for('meetings.create') }}">번개 열기</a>
+      <a class="btn btn--soft" href="{{ url_for('chatbot.chat') }}">챗봇에게 추천받기</a>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

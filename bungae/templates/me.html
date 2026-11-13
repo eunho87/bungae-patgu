@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% from "_macros.html" import meeting_card, category_chips with context %}
+{% block title %}내 모임 · 번개팟구{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1 class="page-title">내 모임</h1>
+  <p class="page-sub">내가 열었거나 참여하는 번개를 한눈에 봐요.</p>
+</header>
+
+<section class="section" aria-labelledby="hosting-title">
+  <div class="section__head">
+    <h2 class="section__title" id="hosting-title">내가 연 모임<span class="section__count">{{ hosting|length }}</span></h2>
+  </div>
+  {% if hosting %}
+  <ul class="card-list">
+    {% for meeting in hosting %}
+    {{ meeting_card(meeting) }}
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty empty--slim">
+    <p class="empty__text">아직 연 번개가 없어요.</p>
+    <div class="empty__actions">
+      <a class="btn btn--primary" href="{{ url_for('meetings.create') }}">번개 열기</a>
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<section class="section" aria-labelledby="joining-title">
+  <div class="section__head">
+    <h2 class="section__title" id="joining-title">참여 중인 모임<span class="section__count">{{ joining|length }}</span></h2>
+  </div>
+  {% if joining %}
+  <ul class="card-list">
+    {% for meeting in joining %}
+    {{ meeting_card(meeting) }}
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty empty--slim">
+    <p class="empty__text">참여 중인 번개가 없어요.</p>
+    <div class="empty__actions">
+      <a class="btn btn--soft" href="{{ url_for('discover.home') }}">번개 둘러보기</a>
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+{% if past %}
+<section class="section" aria-labelledby="past-title">
+  <div class="section__head">
+    <h2 class="section__title" id="past-title">지난 모임<span class="section__count">{{ past|length }}</span></h2>
+  </div>
+  <ul class="card-list">
+    {% for meeting in past %}
+    {{ meeting_card(meeting, muted=true) }}
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="section" id="interests" aria-labelledby="interests-title">
+  <div class="section__head">
+    <h2 class="section__title" id="interests-title">관심사</h2>
+  </div>
+  <div class="panel">
+    <form class="form" method="post" action="{{ url_for('meetings.update_interests') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <fieldset class="field">
+        <legend class="sr-only">관심 있는 활동</legend>
+        <div class="chips">
+          {{ category_chips('interests', user.interest_list) }}
+        </div>
+        <p class="field__hint">고른 관심사에 맞는 번개를 홈의 ‘나를 위한 추천’에 보여 드려요.</p>
+      </fieldset>
+      <button class="btn btn--primary btn--block" type="submit">관심사 저장</button>
+    </form>
+  </div>
+</section>
+
+<section class="section" id="account" aria-labelledby="account-title">
+  <div class="section__head">
+    <h2 class="section__title" id="account-title">계정</h2>
+  </div>
+  <div class="panel account">
+    <div>
+      <p class="account__name">{{ user.nickname }}</p>
+      <p class="account__mail">{{ user.email }}</p>
+    </div>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn--sm" type="submit">로그아웃</button>
+    </form>
+  </div>
+
+  <details class="filters__more settings">
+    <summary>닉네임 바꾸기</summary>
+    <form class="form filters__body" method="post" action="{{ url_for('account.change_nickname') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label class="field__label" for="nickname">새 닉네임</label>
+        <input class="input" type="text" id="nickname" name="nickname" value="{{ user.nickname }}" minlength="2" maxlength="12" autocomplete="nickname" required>
+        <p class="field__hint">한글·영문·숫자·밑줄(_) 2~12자. 이미 올라간 알림에 적힌 예전 닉네임은 바뀌지 않아요.</p>
+      </div>
+      <button class="btn btn--primary btn--block" type="submit">닉네임 바꾸기</button>
+    </form>
+  </details>
+
+  <details class="filters__more settings">
+    <summary>비밀번호 바꾸기</summary>
+    <form class="form filters__body" method="post" action="{{ url_for('account.change_password') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label class="field__label" for="current_password">현재 비밀번호</label>
+        <input class="input" type="password" id="current_password" name="current_password" autocomplete="current-password" maxlength="64" required>
+      </div>
+      <div class="field">
+        <label class="field__label" for="new_password">새 비밀번호 (8자 이상)</label>
+        <input class="input" type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="8" maxlength="64" required>
+      </div>
+      <div class="field">
+        <label class="field__label" for="new_password_confirm">새 비밀번호 확인</label>
+        <input class="input" type="password" id="new_password_confirm" name="new_password_confirm" autocomplete="new-password" minlength="8" maxlength="64" required>
+      </div>
+      <button class="btn btn--primary btn--block" type="submit">비밀번호 바꾸기</button>
+    </form>
+  </details>
+
+  <details class="filters__more settings">
+    <summary>회원 탈퇴</summary>
+    <form class="form filters__body" method="post" action="{{ url_for('account.delete_account') }}" data-confirm="정말 탈퇴할까요? 계정과 내가 연 번개, 참여 기록, 댓글이 모두 지워지고 되돌릴 수 없어요.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p class="field__hint">탈퇴하면 계정, 내가 연 번개, 참여 기록, 댓글, 알림이 모두 지워져요. 내가 연 번개에 참여한 사람에게는 취소 알림이 가요.</p>
+      <div class="field">
+        <label class="field__label" for="delete_password">비밀번호 확인</label>
+        <input class="input" type="password" id="delete_password" name="password" autocomplete="current-password" maxlength="64" required>
+      </div>
+      <button class="btn btn--danger btn--block" type="submit">탈퇴하기</button>
+    </form>
+  </details>
+
+  <p class="settings__about"><a href="{{ url_for('account.about') }}">이용 안내와 저장하는 정보 보기</a></p>
+</section>
+{% endblock %}

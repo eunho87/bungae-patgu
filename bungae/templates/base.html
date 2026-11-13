@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="theme-color" content="#6c4cf1">
+  <title>{% block title %}번개팟구{% endblock %}</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23ffc83d'/%3E%3Ctext x='50' y='72' font-size='62' text-anchor='middle'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</head>
+<body class="{% if user %}has-tabbar{% endif %}{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="logo" href="{{ url_for('discover.home') }}" aria-label="번개팟구 홈">
+        <span class="logo__mark" aria-hidden="true">⚡</span>
+        <span>번개팟구</span>
+      </a>
+      {% if user %}
+      <div class="topbar__right">
+        <span class="topbar__who">{{ user.nickname }}님</span>
+        <a class="bell" href="{{ url_for('account.notifications') }}" aria-label="알림{% if unread_notifications %}, 새 알림 {{ unread_notifications }}개{% endif %}">
+          <span aria-hidden="true">🔔</span>
+          {% if unread_notifications %}
+          <span class="bell__count" aria-hidden="true">{{ unread_notifications if unread_notifications < 10 else '9+' }}</span>
+          {% endif %}
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  {% set flashes = get_flashed_messages(with_categories=true) %}
+  {% if ephemeral_db or flashes %}
+  <div class="notices">
+    {% if ephemeral_db %}
+    <p class="banner banner--warn" role="alert">⚠️ DB가 연결되지 않아 데이터가 곧 사라져요. 실행방법.md의 배포 절차를 확인하세요.</p>
+    {% endif %}
+    {% for category, message in flashes %}
+    <p class="flash flash--{{ category if category in ('success', 'info', 'error') else 'info' }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main class="container" id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if user %}
+  {% set ep = request.endpoint %}
+  <nav class="tabbar" aria-label="주요 메뉴">
+    <ul class="tabbar__list">
+      <li>
+        <a class="tab{% if ep == 'discover.home' %} is-active{% endif %}" href="{{ url_for('discover.home') }}"{% if ep == 'discover.home' %} aria-current="page"{% endif %}>
+          <span class="tab__icon" aria-hidden="true">🏠</span>
+          <span>홈</span>
+        </a>
+      </li>
+      <li>
+        <a class="tab{% if ep == 'chatbot.chat' %} is-active{% endif %}" href="{{ url_for('chatbot.chat') }}"{% if ep == 'chatbot.chat' %} aria-current="page"{% endif %}>
+          <span class="tab__icon" aria-hidden="true">💬</span>
+          <span>추천</span>
+        </a>
+      </li>
+      <li>
+        <a class="tab tab--create{% if ep == 'meetings.create' %} is-active{% endif %}" href="{{ url_for('meetings.create') }}"{% if ep == 'meetings.create' %} aria-current="page"{% endif %}>
+          <span class="tab__icon" aria-hidden="true">+</span>
+          <span>만들기</span>
+        </a>
+      </li>
+      <li>
+        <a class="tab{% if ep == 'meetings.me' %} is-active{% endif %}" href="{{ url_for('meetings.me') }}"{% if ep == 'meetings.me' %} aria-current="page"{% endif %}>
+          <span class="tab__icon" aria-hidden="true">🙋</span>
+          <span>내 모임</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+</body>
+</html>

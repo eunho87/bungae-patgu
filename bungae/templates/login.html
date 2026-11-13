@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}로그인 · 번개팟구{% endblock %}
+{% block content %}
+<div class="auth">
+  <section class="auth__pitch">
+    <span class="auth__bolt" aria-hidden="true">⚡</span>
+    <h1 class="auth__headline">공강에 뭐 하지?<br>지금 바로 번개!</h1>
+    <p class="auth__copy">밥, 보드게임, 공부, 운동까지. 캠퍼스에서 같이 할 숭실대 친구를 지금 바로 찾아보세요.</p>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel__title">로그인</h2>
+    {% if error %}
+    <p class="alert alert--error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form class="form" method="post" action="{{ url_for('auth.login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if next_url %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      {% endif %}
+      <div class="field">
+        <label class="field__label" for="email">학교 이메일</label>
+        <input class="input" type="email" id="email" name="email" value="{{ email }}" placeholder="학번@soongsil.ac.kr" autocomplete="email" inputmode="email" maxlength="120" required>
+      </div>
+      <div class="field">
+        <label class="field__label" for="password">비밀번호</label>
+        <input class="input" type="password" id="password" name="password" autocomplete="current-password" maxlength="64" required>
+      </div>
+      <button class="btn btn--primary btn--block" type="submit">로그인</button>
+    </form>
+  </section>
+
+  <p class="auth__switch">처음이신가요? <a href="{{ url_for('auth.signup', next=next_url) }}">숭실대 이메일로 가입하기</a></p>
+  <p class="auth__switch small muted">비밀번호 재설정 기능은 아직 없어요. 비밀번호를 잊었다면 운영하는 조에 알려 주세요.</p>
+  <p class="auth__switch small"><a href="{{ url_for('account.about') }}">이용 안내와 저장하는 정보</a></p>
+</div>
+{% endblock %}

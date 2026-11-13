@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · 번개팟구{% endblock %}
+{% block content %}
+<section class="panel error-page">
+  <p class="error-page__code">{{ code }}</p>
+  <h1 class="error-page__msg">{{ message }}</h1>
+  <a class="btn btn--primary" href="{{ url_for('discover.home') }}">홈으로 돌아가기</a>
+</section>
+{% endblock %}

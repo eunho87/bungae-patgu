@@ -1,0 +1,76 @@
+{# 여러 화면이 함께 쓰는 조각. 가져올 때는 `with context`를 붙여야 CATEGORY_LABEL 같은 공통 값이 보인다. #}
+
+{% macro state_badges(meeting) -%}
+<span class="badge-row">
+  {%- if user and meeting.host_id == user.id %}
+  <span class="badge badge--mine">내 번개</span>
+  {%- elif user and meeting.has_participant(user) and meeting.state != 'cancelled' %}
+  <span class="badge badge--mine">{{ '참여함' if meeting.state == 'ended' else '참여 중' }}</span>
+  {%- endif %}
+  <span class="badge badge--{{ meeting.state }}">{{ STATE_LABEL.get(meeting.state, meeting.state) }}</span>
+  {%- if meeting.closing_soon %}
+  <span class="badge badge--soon">마감 임박</span>
+  {%- elif meeting.starting_soon %}
+  <span class="badge badge--soon">곧 시작</span>
+  {%- endif %}
+</span>
+{%- endmacro %}
+
+{% macro category_pill(meeting) -%}
+<span class="pill"><span aria-hidden="true">{{ CATEGORY_EMOJI.get(meeting.category, '✨') }}</span> {{ CATEGORY_LABEL.get(meeting.category, '기타') }}</span>
+{%- endmacro %}
+
+{# 모임 카드. reasons는 추천 이유 문구 목록(없어도 된다), muted는 지난 모임용 흐린 표시. #}
+{% macro meeting_card(meeting, reasons=none, muted=false) %}
+<li>
+  {#- 지금 참여할 수 없는 남의 모임은 흐리게 보여 줘서, 참여할 수 있는 모임이 먼저 눈에 들어오게 한다. -#}
+  {%- set closed_to_me = meeting.state in ('full', 'closed', 'blocked') and not meeting.has_participant(user) %}
+  <a class="mcard{% if muted or closed_to_me %} mcard--muted{% endif %}" href="{{ url_for('meetings.detail', meeting_id=meeting.id) }}">
+    <div class="mcard__top">
+      {{ category_pill(meeting) }}
+      {{ state_badges(meeting) }}
+    </div>
+    <h3 class="mcard__title">{{ meeting.title }}</h3>
+    <p class="mcard__meta">
+      <span><span aria-hidden="true">🕒</span> {{ meeting|when }}</span>
+      {%- set rel = meeting|relative %}
+      {%- if rel and meeting.state not in ('ongoing', 'ended', 'cancelled') %}
+      <span class="mcard__rel">{{ rel }}</span>
+      {%- endif %}
+    </p>
+    <p class="mcard__meta">
+      <span><span aria-hidden="true">📍</span> {{ meeting.place }}</span>
+      <span class="mcard__seats"><span aria-hidden="true">👥</span> {{ meeting.joined_count }}/{{ meeting.capacity }}명</span>
+      <span class="mcard__host"><span aria-hidden="true">👤</span><span class="sr-only">호스트</span> {{ meeting.host.nickname }}</span>
+    </p>
+    {%- if meeting.tag_list %}
+    <ul class="tags" aria-label="태그">
+      {%- for tag in meeting.tag_list %}
+      <li class="tag">#{{ tag }}</li>
+      {%- endfor %}
+    </ul>
+    {%- endif %}
+    {%- if reasons %}
+    <ul class="reasons" aria-label="추천 이유">
+      {%- for reason in reasons %}
+      <li class="reason">{{ reason }}</li>
+      {%- endfor %}
+    </ul>
+    {%- endif %}
+  </a>
+</li>
+{% endmacro %}
+
+{% macro field_error(errors, key) -%}
+{% if errors and errors.get(key) %}<p class="field__error" id="{{ key }}-error" role="alert">{{ errors[key] }}</p>{% endif %}
+{%- endmacro %}
+
+{# 활동 종류를 고르는 칩. kind는 'checkbox'(여러 개) 또는 'radio'(하나). selected는 키 목록. #}
+{% macro category_chips(name, selected, kind='checkbox') -%}
+{% for key, label, emoji in CATEGORIES %}
+<label class="chip-check">
+  <input type="{{ kind }}" name="{{ name }}" value="{{ key }}"{% if key in selected %} checked{% endif %}>
+  <span class="chip"><span aria-hidden="true">{{ emoji }}</span> {{ label }}</span>
+</label>
+{% endfor %}
+{%- endmacro %}

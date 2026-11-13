@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field_error, category_chips with context %}
+{% set editing = mode == 'edit' %}
+{% block title %}{{ '모임 수정' if editing else '번개 열기' }} · 번개팟구{% endblock %}
+{% block content %}
+{% if editing %}
+<a class="back-link" href="{{ url_for('meetings.detail', meeting_id=meeting.id) }}">← 모임으로 돌아가기</a>
+{% endif %}
+<header class="page-head">
+  <h1 class="page-title">{{ '모임 정보 수정' if editing else '번개 열기' }}</h1>
+  <p class="page-sub">{{ '바뀐 내용은 참여자에게 바로 보여요.' if editing else '언제, 어디서, 뭘 할지만 정하면 끝이에요.' }}</p>
+</header>
+
+{% if limit_reached %}
+{# 한도에 걸렸으면 폼을 다 채우게 한 뒤 거절하지 않고 처음부터 알려 준다. #}
+<section class="panel">
+  <p class="alert alert--warn" role="alert">{{ limit_message }}</p>
+  <a class="btn btn--primary btn--block" href="{{ url_for('meetings.me') }}">내가 연 번개 보기</a>
+</section>
+{% else %}
+<section class="panel">
+  {% if errors %}
+  <p class="alert alert--error" role="alert">입력한 내용을 다시 확인해 주세요.</p>
+  {% endif %}
+  <form class="form" method="post" action="{% if editing %}{{ url_for('meetings.edit', meeting_id=meeting.id) }}{% else %}{{ url_for('meetings.create') }}{% endif %}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="field">
+      <label class="field__label" for="title">모임 이름 <span class="field__opt">선택</span></label>
+      <input class="input{% if errors.get('title') %} is-invalid{% endif %}" type="text" id="title" name="title" value="{{ values.title }}" placeholder="예: 공강에 보드게임 한 판" maxlength="40" aria-describedby="title-hint">
+      <p class="field__hint" id="title-hint">비워 두면 ‘공부 번개 · 중앙도서관’처럼 종류와 장소로 지어 드려요.</p>
+      {{ field_error(errors, 'title') }}
+    </div>
+
+    <fieldset class="field">
+      <legend>활동 종류</legend>
+      <div class="chips">
+        {{ category_chips('category', [values.category], 'radio') }}
+      </div>
+      {{ field_error(errors, 'category') }}
+    </fieldset>
+
+    <div class="field">
+      <div class="field-grid">
+        <div class="field">
+          <label class="field__label" for="date">날짜</label>
+          <input class="input{% if errors.get('start') %} is-invalid{% endif %}" type="date" id="date" name="date" value="{{ values.date }}" min="{{ min_date }}" max="{{ max_date }}" required>
+        </div>
+        <div class="field">
+          <label class="field__label" for="time">시작 시간</label>
+          <input class="input{% if errors.get('start') %} is-invalid{% endif %}" type="time" id="time" name="time" value="{{ values.time }}" required>
+        </div>
+      </div>
+      {{ field_error(errors, 'start') }}
+      <div class="chips quick-picks" role="group" aria-label="빠른 시간 선택">
+        {% for label, quick_date, quick_time in quick_times %}
+        <button class="chip" type="button" data-set="date={{ quick_date }};time={{ quick_time }}">{{ label }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="field-grid">
+      <div class="field">
+        <label class="field__label" for="duration">예상 소요 시간</label>
+        <select class="select{% if errors.get('duration') %} is-invalid{% endif %}" id="duration" name="duration">
+          {% for minutes in durations %}
+          <option value="{{ minutes }}"{% if values.duration == minutes|string %} selected{% endif %}>{{ minutes|duration }}</option>
+          {% endfor %}
+        </select>
+        {{ field_error(errors, 'duration') }}
+      </div>
+      <div class="field">
+        <label class="field__label" for="capacity">모집 인원 (나 포함)</label>
+        <input class="input{% if errors.get('capacity') %} is-invalid{% endif %}" type="number" id="capacity" name="capacity" value="{{ values.capacity }}" min="{{ capacity_min }}" max="{{ capacity_max }}" step="1" inputmode="numeric" required>
+        {{ field_error(errors, 'capacity') }}
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="place">만날 장소</label>
+      <input class="input{% if errors.get('place') %} is-invalid{% endif %}" type="text" id="place" name="place" value="{{ values.place }}" list="place-suggestions" placeholder="예: 학생회관 1층" maxlength="60" required>
+      <datalist id="place-suggestions">
+        {% for place in place_suggestions %}
+        <option value="{{ place }}"></option>
+        {% endfor %}
+      </datalist>
+      {{ field_error(errors, 'place') }}
+      <div class="chips quick-picks" role="group" aria-label="자주 만나는 장소">
+        {% for place in place_suggestions %}
+        <button class="chip" type="button" data-set="place={{ place }}">{{ place }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="tags">태그 <span class="field__opt">선택 · 최대 5개</span></label>
+      <input class="input{% if errors.get('tags') %} is-invalid{% endif %}" type="text" id="tags" name="tags" value="{{ values.tags }}" placeholder="띄어쓰기로 구분해요. 예: 초면환영 가볍게" maxlength="80" autocomplete="off" aria-describedby="tags-hint">
+      <div class="chips" data-tag-picker data-tag-input="tags" data-tag-max="5">
+        {% for tag in PRESET_TAGS %}
+        <button class="chip" type="button" data-tag="{{ tag }}" aria-pressed="false">#{{ tag }}</button>
+        {% endfor %}
+      </div>
+      <p class="field__hint" id="tags-hint">아래 태그를 누르면 바로 들어가요. 한 번 더 누르면 빠져요.</p>
+      {{ field_error(errors, 'tags') }}
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="description">소개 <span class="field__opt">선택 · 500자</span></label>
+      <textarea class="textarea{% if errors.get('description') %} is-invalid{% endif %}" id="description" name="description" rows="4" maxlength="500" placeholder="어떤 모임인지, 준비물이 있는지 알려 주세요.">{{ values.description }}</textarea>
+      {{ field_error(errors, 'description') }}
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="contact_link">오픈채팅 링크 <span class="field__opt">선택</span></label>
+      <input class="input{% if errors.get('contact_link') %} is-invalid{% endif %}" type="url" id="contact_link" name="contact_link" value="{{ values.contact_link }}" placeholder="https://open.kakao.com/..." maxlength="200" inputmode="url" aria-describedby="contact-hint">
+      <p class="field__hint" id="contact-hint">🔒 참여한 사람에게만 보여요.</p>
+      {{ field_error(errors, 'contact_link') }}
+    </div>
+
+    <div class="form__actions">
+      <button class="btn btn--primary btn--block" type="submit">{{ '수정 내용 저장' if editing else '번개 열기' }}</button>
+      {% if editing %}
+      <a class="btn btn--block" href="{{ url_for('meetings.detail', meeting_id=meeting.id) }}">취소</a>
+      {% endif %}
+    </div>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

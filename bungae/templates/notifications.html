@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}알림 · 번개팟구{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1 class="page-title">알림</h1>
+  <p class="page-sub">내 번개에 생긴 일을 알려 드려요. 최근 50개까지 보관해요.</p>
+</header>
+
+{% if items %}
+<ul class="notes">
+  {% for item in items %}
+  <li class="note{% if item.is_new %} note--new{% endif %}">
+    {% if item.meeting_id %}
+    <a class="note__body" href="{{ url_for('meetings.detail', meeting_id=item.meeting_id) }}">
+      <span class="note__text">{{ item.message }}</span>
+      <span class="note__time">{{ item.created_at|stamp }}{% if item.is_new %} · 새 알림{% endif %}</span>
+    </a>
+    {% else %}
+    <div class="note__body">
+      <span class="note__text">{{ item.message }}</span>
+      <span class="note__time">{{ item.created_at|stamp }}{% if item.is_new %} · 새 알림{% endif %}</span>
+    </div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty">
+  <p class="empty__icon" aria-hidden="true">🔔</p>
+  <p class="empty__title">아직 알림이 없어요</p>
+  <p class="empty__text">누가 내 번개에 참여하거나 댓글을 남기면 여기에서 알려 드려요.</p>
+  <div class="empty__actions">
+    <a class="btn btn--primary" href="{{ url_for('meetings.create') }}">번개 열기</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

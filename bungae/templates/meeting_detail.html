@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% from "_macros.html" import meeting_card, state_badges, category_pill with context %}
+{% set state = meeting.state %}
+{% set editable = state not in ('ongoing', 'ended', 'cancelled') %}
+{% block title %}{{ meeting.title }} · 번개팟구{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('discover.home') }}">← 번개 목록</a>
+
+{% if report_blocked %}
+<p class="alert alert--warn" role="status">🚩 신고가 여러 건 접수되어 모집이 중단된 모임이에요.</p>
+{% endif %}
+
+<article>
+  <section class="panel">
+    <div class="detail__top">
+      {{ category_pill(meeting) }}
+      {{ state_badges(meeting) }}
+    </div>
+    <h1 class="detail__title">{{ meeting.title }}</h1>
+
+    <dl class="facts">
+      <div class="fact">
+        <span class="fact__icon" aria-hidden="true">🕒</span>
+        <div>
+          <dt class="fact__label">언제</dt>
+          <dd class="fact__value">
+            {{ meeting|when }}
+            {%- set rel = meeting|relative %}
+            {%- if rel and editable %}<span class="fact__extra">{{ rel }}</span>{% endif %}
+          </dd>
+        </div>
+      </div>
+      <div class="fact">
+        <span class="fact__icon" aria-hidden="true">⏱️</span>
+        <div>
+          <dt class="fact__label">예상 소요 시간</dt>
+          <dd class="fact__value">{{ meeting.duration_min|duration }}</dd>
+        </div>
+      </div>
+      <div class="fact">
+        <span class="fact__icon" aria-hidden="true">📍</span>
+        <div>
+          <dt class="fact__label">어디서</dt>
+          <dd class="fact__value">{{ meeting.place }}</dd>
+        </div>
+      </div>
+    </dl>
+
+    {% if meeting.tag_list %}
+    <ul class="tags detail__tags" aria-label="태그">
+      {% for tag in meeting.tag_list %}
+      <li class="tag">#{{ tag }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if meeting.description %}
+    <p class="detail__desc">{{ meeting.description }}</p>
+    {% endif %}
+  </section>
+
+  {# 참여 버튼은 스크롤하지 않아도 보이도록 화면 아래에 붙여 둔다. 제자리까지 내려오면 그 자리에 놓인다. #}
+  {% if not is_host and not is_member and meeting.joinable %}
+  {% if conflict %}
+  <p class="alert alert--warn" role="status">⚠️ 참여 중인 ‘{{ conflict.title }}’({{ conflict|when }})와 시간이 겹쳐요. 그래도 참여할 수 있어요.</p>
+  {% endif %}
+  <div class="cta-bar">
+    <form method="post" action="{{ url_for('meetings.join', meeting_id=meeting.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn--primary btn--block" type="submit">⚡ 참여하기 <span class="cta-bar__sub">· {{ meeting.seats_left }}자리 남음</span></button>
+    </form>
+  </div>
+  {% endif %}
+
+  <section class="panel" aria-labelledby="people-title">
+    <h2 class="panel__title" id="people-title">참여 인원</h2>
+    <div class="seats__line">
+      <span class="seats__num">{{ meeting.joined_count }}/{{ meeting.capacity }}명</span>
+      <span class="seats__left">
+        {%- if state == 'open' %}{{ meeting.seats_left }}자리 남았어요
+        {%- elif state == 'full' %}정원이 다 찼어요
+        {%- else %}{{ STATE_LABEL.get(state, state) }}
+        {%- endif -%}
+      </span>
+    </div>
+    <progress class="seat-bar" value="{{ meeting.joined_count }}" max="{{ meeting.capacity }}">{{ meeting.joined_count }}/{{ meeting.capacity }}명</progress>
+
+    <ul class="people" aria-label="참여자">
+      {% for p in meeting.participations %}
+      <li class="person">
+        {{ p.user.nickname }}
+        {%- if p.user_id == meeting.host_id %} <span class="person__host">호스트</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+
+    <p class="host-line">호스트 <strong>{{ meeting.host.nickname }}</strong> ·
+      {% if host_stats.hosted or host_stats.joined %}지금까지 번개 개설 {{ host_stats.hosted }}회 · 참여 {{ host_stats.joined }}회
+      {%- else %}아직 치른 번개가 없어요{% endif %}</p>
+  </section>
+
+  <section class="panel" aria-label="참여와 공유">
+    <div class="actions">
+      {% if is_host %}
+        {% if editable %}
+        <div class="btn-row">
+          <a class="btn btn--soft" href="{{ url_for('meetings.edit', meeting_id=meeting.id) }}">수정</a>
+          {% if state == 'blocked' %}
+          {# 신고로 중단된 모임은 다시 열 수 없으므로 눌러도 실패할 버튼을 내지 않는다. #}
+          {% elif meeting.status == 'closed' %}
+          <form method="post" action="{{ url_for('meetings.set_status', meeting_id=meeting.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="reopen">
+            <button class="btn" type="submit">다시 열기</button>
+          </form>
+          {% else %}
+          <form method="post" action="{{ url_for('meetings.set_status', meeting_id=meeting.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="close">
+            <button class="btn" type="submit">모집 마감</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('meetings.set_status', meeting_id=meeting.id) }}" data-confirm="모임을 취소할까요? 취소하면 되돌릴 수 없어요.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="cancel">
+            <button class="btn btn--danger" type="submit">모임 취소</button>
+          </form>
+        </div>
+        <p class="actions__note">
+          {%- if state == 'open' %}내가 연 번개예요. 링크를 공유해서 사람을 모아 보세요.
+          {%- elif state == 'full' %}정원이 다 찼어요. 자리를 늘리려면 수정에서 모집 인원을 바꿔 주세요.
+          {%- elif state == 'closed' %}모집을 마감해 둔 상태예요. 다시 열 수 있어요.
+          {%- elif state == 'blocked' %}신고가 여러 건 접수되어 모집이 중단됐어요. 다시 열 수 없어요.
+          {%- endif -%}
+        </p>
+        {% else %}
+        <p class="actions__note">
+          {%- if state == 'cancelled' %}취소한 모임이에요.
+          {%- elif state == 'ongoing' %}지금 진행 중인 번개예요.
+          {%- else %}끝난 모임이에요.
+          {%- endif -%}
+        </p>
+        {% endif %}
+      {% elif is_member %}
+        <p class="actions__note">
+          {%- if state == 'cancelled' %}호스트가 취소한 모임이에요.
+          {%- elif state == 'ongoing' %}✅ 지금 진행 중인 번개예요.
+          {%- elif state == 'ended' %}참여했던 번개예요.
+          {%- else %}✅ 참여 중인 번개예요.
+          {%- endif -%}
+        </p>
+        {% if editable %}
+        <form method="post" action="{{ url_for('meetings.leave', meeting_id=meeting.id) }}" data-confirm="참여를 취소할까요?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn--danger btn--block" type="submit">참여 취소</button>
+        </form>
+        {% endif %}
+      {% elif not meeting.joinable %}
+        <p class="actions__note">
+          {%- if state == 'full' %}정원이 다 차서 지금은 참여할 수 없어요.
+          {%- elif state == 'closed' %}호스트가 모집을 마감했어요.
+          {%- elif state == 'blocked' %}신고가 접수되어 지금은 참여할 수 없어요.
+          {%- elif state == 'cancelled' %}취소된 모임이에요.
+          {%- elif state == 'ongoing' %}이미 시작한 모임이에요.
+          {%- else %}끝난 모임이에요.
+          {%- endif -%}
+        </p>
+      {% endif %}
+
+      {% if is_member and meeting.contact_link and meeting.contact_link.startswith('https://') %}
+      <div class="contact">
+        <span class="contact__label">💬 오픈채팅 링크</span>
+        <a class="contact__link" href="{{ meeting.contact_link }}" target="_blank" rel="noopener noreferrer">{{ meeting.contact_link }}</a>
+        <span class="contact__note">번개팟구 밖의 채팅방이에요. 돈을 먼저 보내 달라거나 개인정보를 요구하면 응하지 말고 모임을 신고해 주세요.</span>
+      </div>
+      {% elif meeting.contact_link and not is_member and meeting.joinable %}
+      <p class="contact contact--locked">🔒 오픈채팅 링크는 참여하면 볼 수 있어요.</p>
+      {% endif %}
+
+      {# 취소됐거나 이미 시작한 모임은 사람을 더 모을 수 없으므로 공유·캘린더 버튼을 내지 않는다. #}
+      {% if editable %}
+      <div class="btn-row">
+        <button class="btn" type="button" data-share-url="{{ share_url }}" data-share-title="{{ meeting.title }}">🔗 링크 공유</button>
+        {% if is_member %}
+        <a class="btn" href="{{ meeting|gcal }}" target="_blank" rel="noopener noreferrer">📅 캘린더에 추가</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="panel" id="comments" aria-labelledby="comments-title">
+    <h2 class="panel__title" id="comments-title">댓글 <span class="section__count">{{ meeting.comments|length }}</span></h2>
+    {% if meeting.comments %}
+    <ul class="comments">
+      {% for comment in meeting.comments %}
+      <li class="comment">
+        <div class="comment__head">
+          <span class="comment__name">{{ comment.user.nickname }}</span>
+          {% if comment.user_id == meeting.host_id %}<span class="person__host">호스트</span>{% endif %}
+          <span class="comment__time">{{ comment.created_at|stamp }}</span>
+          {% if comment.user_id == user.id or is_host %}
+          <form class="comment__del" method="post" action="{{ url_for('meetings.delete_comment', comment_id=comment.id) }}" data-confirm="이 댓글을 지울까요?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="link-btn" type="submit" aria-label="{{ comment.user.nickname }}님의 댓글 삭제">삭제</button>
+          </form>
+          {% endif %}
+        </div>
+        <p class="comment__body">{{ comment.body }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted small">아직 댓글이 없어요. 궁금한 점을 물어보세요.</p>
+    {% endif %}
+
+    {% if state != 'cancelled' %}
+    <form class="comment-form" method="post" action="{{ url_for('meetings.add_comment', meeting_id=meeting.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="sr-only" for="comment-body">댓글</label>
+      <input class="input" type="text" id="comment-body" name="body" placeholder="댓글을 남겨 보세요 (200자)" maxlength="200" autocomplete="off" required>
+      <button class="btn btn--primary" type="submit">등록</button>
+    </form>
+    {% endif %}
+  </section>
+
+  {% if not is_host %}
+  <details class="filters__more settings">
+    <summary>🚩 이 모임 신고하기</summary>
+    {% if reported_by_me %}
+    <p class="filters__body muted small">이미 신고한 모임이에요. 알려 주셔서 고마워요.</p>
+    {% else %}
+    <form class="form filters__body" method="post" action="{{ url_for('meetings.report', meeting_id=meeting.id) }}" data-confirm="이 모임을 신고할까요?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label class="field__label" for="reason">신고 사유</label>
+        <select class="select" id="reason" name="reason" required>
+          {% for key, label in report_reasons %}
+          <option value="{{ key }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <p class="field__hint">서로 다른 3명이 신고하면 모집이 자동으로 멈춰요. 신고한 사람이 누구인지는 호스트에게 보이지 않아요.</p>
+      </div>
+      <button class="btn btn--danger btn--block" type="submit">신고하기</button>
+    </form>
+    {% endif %}
+  </details>
+  {% endif %}
+</article>
+
+{% if similar %}
+<section class="section" aria-labelledby="similar-title">
+  <div class="section__head">
+    <h2 class="section__title" id="similar-title">비슷한 모임</h2>
+  </div>
+  <ul class="card-list">
+    {% for rec in similar %}
+    {{ meeting_card(rec.meeting, rec.reasons) }}
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

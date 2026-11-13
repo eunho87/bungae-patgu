@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field_error, category_chips with context %}
+{% block title %}가입하기 · 번개팟구{% endblock %}
+{% block content %}
+<div class="auth">
+  <header class="page-head">
+    <h1 class="page-title">가입하기</h1>
+    <p class="page-sub">숭실대 학생이라면 1분이면 끝나요.</p>
+  </header>
+
+  <section class="panel">
+    {% if errors %}
+    <p class="alert alert--error" role="alert">입력한 내용을 다시 확인해 주세요.</p>
+    {% endif %}
+    <form class="form" method="post" action="{{ url_for('auth.signup') }}">
+      {% if next_url %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      {% endif %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="field">
+        <label class="field__label" for="email">학교 이메일</label>
+        <input class="input{% if errors.get('email') %} is-invalid{% endif %}" type="email" id="email" name="email" value="{{ form.email }}" placeholder="학번@soongsil.ac.kr" autocomplete="email" inputmode="email" maxlength="120" required aria-describedby="email-hint">
+        <p class="field__hint" id="email-hint">@soongsil.ac.kr 이메일만 가입할 수 있어요.</p>
+        {{ field_error(errors, 'email') }}
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="nickname">닉네임</label>
+        <input class="input{% if errors.get('nickname') %} is-invalid{% endif %}" type="text" id="nickname" name="nickname" value="{{ form.nickname }}" placeholder="한글·영문·숫자 2~12자" autocomplete="nickname" minlength="2" maxlength="12" required>
+        {{ field_error(errors, 'nickname') }}
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="password">비밀번호</label>
+        <input class="input{% if errors.get('password') %} is-invalid{% endif %}" type="password" id="password" name="password" placeholder="8자 이상" autocomplete="new-password" minlength="8" maxlength="64" required>
+        {{ field_error(errors, 'password') }}
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="password_confirm">비밀번호 확인</label>
+        <input class="input{% if errors.get('password_confirm') %} is-invalid{% endif %}" type="password" id="password_confirm" name="password_confirm" autocomplete="new-password" minlength="8" maxlength="64" required>
+        {{ field_error(errors, 'password_confirm') }}
+      </div>
+
+      <fieldset class="field">
+        <legend>관심사 <span class="field__opt">선택</span></legend>
+        <div class="chips">
+          {{ category_chips('interests', form.interests) }}
+        </div>
+        <p class="field__hint">고른 관심사에 맞는 번개를 홈에서 먼저 보여 드려요. 나중에 바꿀 수 있어요.</p>
+      </fieldset>
+
+      <div class="field">
+        <label class="consent">
+          <input type="checkbox" name="agree" value="1"{% if form.agree %} checked{% endif %} required>
+          <span><a href="{{ url_for('account.about') }}" target="_blank" rel="noopener">이용 안내와 저장하는 정보</a>를 읽었고, 학교 이메일·닉네임·활동 기록이 저장되는 데 동의해요.</span>
+        </label>
+        {{ field_error(errors, 'agree') }}
+      </div>
+
+      <button class="btn btn--primary btn--block" type="submit">가입하고 시작하기</button>
+    </form>
+  </section>
+
+  <p class="auth__switch">이미 계정이 있나요? <a href="{{ url_for('auth.login', next=next_url) }}">로그인</a></p>
+</div>
+{% endblock %}

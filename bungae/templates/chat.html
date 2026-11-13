@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}추천 챗봇 · 번개팟구{% endblock %}
+{% block body_class %} page-chat{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>{% endblock %}
+{% block content %}
+<section class="chat" id="chat"
+         data-api-url="{{ url_for('chatbot.api_chat') }}"
+         data-reset-url="{{ url_for('chatbot.api_chat_reset') }}"
+         data-login-url="{{ url_for('auth.login', next=url_for('chatbot.chat')) }}"
+         data-user-id="{{ user.id }}"
+         data-ai-enabled="{{ '1' if ai_enabled else '0' }}"
+         data-ai-left="{{ ai_left }}"
+         data-max-message="{{ max_message }}">
+  <header class="chat__head">
+    <div>
+      <h1 class="chat__title">번개 추천 챗봇</h1>
+      <p class="chat__status" id="chat-status">
+        {%- if ai_enabled %}AI 해석 오늘 {{ ai_left }}회 남음{% else %}기본 해석 모드 (AI 키 미설정){% endif -%}
+      </p>
+    </div>
+    <button class="btn btn--sm" type="button" id="chat-reset">새 대화</button>
+  </header>
+
+  <div class="chat__log" id="chat-log" role="log" aria-live="polite" aria-label="대화 내용" tabindex="0">
+    <div class="msg msg--bot" data-static>
+      <p class="bubble">{{ help_text }}</p>
+    </div>
+  </div>
+
+  <div class="chat__foot">
+    <div class="chip-scroll chat__quick" id="chat-quick" aria-label="빠른 질문">
+      {% for prompt in quick_prompts %}
+      <button class="chip" type="button" data-prompt="{{ prompt }}">{{ prompt }}</button>
+      {% endfor %}
+    </div>
+    <form class="chat__form" id="chat-form" autocomplete="off">
+      <label class="sr-only" for="chat-input">메시지</label>
+      <input class="input" type="text" id="chat-input" name="message" placeholder="예: 지금 2시간 비는데 보드게임 할 사람?" maxlength="{{ max_message }}" enterkeyhint="send" required>
+      <button class="btn btn--primary" type="submit" id="chat-send">보내기</button>
+    </form>
+    <p class="chat__note">🔒 AI 해석에는 입력한 문장과 거기서 알아낸 조건(시간·종류)만 전달돼요. 개인정보는 적지 마세요.</p>
+    <noscript><p class="chat__note">챗봇은 자바스크립트가 켜져 있어야 쓸 수 있어요.</p></noscript>
+  </div>
+</section>
+{% endblock %}

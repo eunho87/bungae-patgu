@@ -1169,6 +1169,21 @@ textarea {
   margin-top: var(--s3);
 }
 
+/* 좁은 화면에서는 묶음이 상자를 만들지 않는다. 그래야 참여 버튼이 글 전체를 기준으로 화면 아래에 붙는다. */
+.detail__side {
+  display: contents;
+}
+
+.detail__side > .alert {
+  margin-top: var(--s4);
+  margin-bottom: 0;
+}
+
+.detail__side > .panel,
+.detail__side + .panel {
+  margin-top: var(--s4);
+}
+
 .panel__title {
   margin-bottom: var(--s3);
   font-size: 1.0625rem;
@@ -1929,8 +1944,73 @@ body.page-chat .container {
     bottom: var(--s4);
   }
 
-  .page-home .container {
+  .page-home .container,
+  .page-detail .container {
     max-width: var(--wide-w);
+  }
+
+  /* 모임 상세: 왼쪽에 내용과 댓글, 오른쪽에 참여 버튼·인원·공유. 마지막 1fr 줄이 두 단의 높이 차이를 흡수해서
+     오른쪽이 더 길어도 왼쪽 상자 사이가 벌어지지 않는다. */
+  .detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: var(--s6);
+  }
+
+  .detail__info {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .detail > #comments {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .detail__report {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .detail__side {
+    display: block;
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--topbar-h) + var(--s4));
+  }
+
+  .detail__side > :first-child {
+    margin-top: 0;
+  }
+
+  .detail__side .cta-bar {
+    position: static;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .detail__side .cta-bar .btn {
+    min-height: 52px;
+    font-size: 1.0625rem;
+  }
+
+  /* 오른쪽 단은 좁아서 버튼 글자가 두 줄로 꺾인다. 꺾지 않고, 자리가 모자란 버튼은 다음 줄을 통째로 쓰게 한다. */
+  .detail__side .btn-row .btn {
+    padding-right: var(--s3);
+    padding-left: var(--s3);
+    white-space: nowrap;
+  }
+
+  .page-detail .card-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .page-detail .card-list > li {
+    display: grid;
   }
 
   .home {

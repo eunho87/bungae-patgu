@@ -3,6 +3,7 @@
 {% set state = meeting.state %}
 {% set editable = state not in ('ongoing', 'ended', 'cancelled') %}
 {% block title %}{{ meeting.title }} · 번개팟구{% endblock %}
+{% block body_class %} page-detail{% endblock %}
 {% block content %}
 <a class="back-link" href="{{ url_for('discover.home') }}">← 번개 목록</a>
 
@@ -10,8 +11,8 @@
 <p class="alert alert--warn" role="status">🚩 신고가 여러 건 접수되어 모집이 중단된 모임이에요.</p>
 {% endif %}
 
-<article>
-  <section class="panel">
+<article class="detail">
+  <section class="panel detail__info">
     <div class="detail__top">
       {{ category_pill(meeting) }}
       {{ state_badges(meeting) }}
@@ -59,6 +60,9 @@
     {% endif %}
   </section>
 
+  {# 참여와 관련된 것(참여 버튼, 인원, 공유)을 한 묶음으로 둔다. 넓은 화면에서는 이 묶음이 오른쪽 단이 되고,
+     좁은 화면에서는 묶음이 없는 것처럼 위아래로 이어진다. #}
+  <div class="detail__side">
   {# 참여 버튼은 스크롤하지 않아도 보이도록 화면 아래에 붙여 둔다. 제자리까지 내려오면 그 자리에 놓인다. #}
   {% if not is_host and not is_member and meeting.joinable %}
   {% if conflict %}
@@ -188,6 +192,7 @@
       {% endif %}
     </div>
   </section>
+  </div>
 
   <section class="panel" id="comments" aria-labelledby="comments-title">
     <h2 class="panel__title" id="comments-title">댓글 <span class="section__count">{{ meeting.comments|length }}</span></h2>
@@ -225,7 +230,7 @@
   </section>
 
   {% if not is_host %}
-  <details class="filters__more settings">
+  <details class="filters__more settings detail__report">
     <summary>🚩 이 모임 신고하기</summary>
     {% if reported_by_me %}
     <p class="filters__body muted small">이미 신고한 모임이에요. 알려 주셔서 고마워요.</p>

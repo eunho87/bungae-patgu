@@ -86,8 +86,8 @@ def test_api_chat_without_token_is_400(csrf):
         ("/me/interests", {"interests": "game"}),
         ("/logout", {}),
         ("/api/chat/reset", {}),
-        ("/login", {"email": "me@soongsil.ac.kr", "password": "x"}),
-        ("/signup", {"email": "x@soongsil.ac.kr"}),
+        ("/login", {"email": "me@ssu.ac.kr", "password": "x"}),
+        ("/signup", {"email": "x@ssu.ac.kr"}),
     ],
 )
 def test_every_post_requires_a_token(csrf, path, payload):

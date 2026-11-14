@@ -123,7 +123,7 @@ class Data:
     def user(self, nickname=None, interests="", email=None, password=PASSWORD):
         self._n += 1
         nickname = nickname or f"user{self._n}"
-        email = email or f"{nickname.lower()}@soongsil.ac.kr"
+        email = email or f"{nickname.lower()}@ssu.ac.kr"
         with self.app.app_context():
             user = User(
                 email=email,

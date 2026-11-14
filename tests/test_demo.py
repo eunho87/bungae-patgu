@@ -68,19 +68,38 @@ def test_cancelled_meetings_do_not_count(app):
 def test_auto_seed_accounts_cannot_log_in(app, client):
     with app.app_context():
         demo.auto_seed()
-        user = User.query.filter_by(email="demo1@soongsil.ac.kr").one()
-        for guess in ("", "demo", "password", "demo1@soongsil.ac.kr", "번개장인"):
+        user = User.query.filter_by(email="demo1@ssu.ac.kr").one()
+        for guess in ("", "demo", "password", "demo1@ssu.ac.kr", "번개장인"):
             assert not check_password_hash(user.password_hash, guess)
-    response = client.post("/login", data={"email": "demo1@soongsil.ac.kr", "password": "demo"})
+    response = client.post("/login", data={"email": "demo1@ssu.ac.kr", "password": "demo"})
     assert response.status_code == 400
 
 
 def test_existing_nickname_gets_a_suffix(app, data):
-    data.user(nickname="번개장인", email="real@soongsil.ac.kr")
+    data.user(nickname="번개장인", email="real@ssu.ac.kr")
     with app.app_context():
         assert demo.auto_seed() == 11
-        assert User.query.filter_by(email="real@soongsil.ac.kr").one().nickname == "번개장인"
-        assert User.query.filter_by(email="demo1@soongsil.ac.kr").one().nickname == "번개장인1"
+        assert User.query.filter_by(email="real@ssu.ac.kr").one().nickname == "번개장인"
+        assert User.query.filter_by(email="demo1@ssu.ac.kr").one().nickname == "번개장인1"
+
+
+def test_accounts_from_the_old_domain_are_reused(app):
+    """가입 주소를 바꾸기 전에 만들어진 데모 계정과 모임이 있는 DB(배포 DB)에서 두 벌이 생기지 않아야 한다."""
+    with app.app_context():
+        demo.auto_seed()
+        for user in User.query.all():
+            user.email = user.email.replace("@ssu.ac.kr", demo.LEGACY_DOMAIN)
+        db.session.commit()
+        ids = sorted(user.id for user in User.query.all())
+
+        assert demo.upcoming_count() == 11
+        assert demo.auto_seed() == 0
+        assert Meeting.query.count() == 11
+
+        timeutil.set_fixed_now(NOW_UTC + timedelta(days=4))
+        assert demo.auto_seed() == 11
+        assert sorted(user.id for user in User.query.all()) == ids
+        assert all(user.email.endswith("@ssu.ac.kr") for user in User.query.all())
 
 
 def test_real_users_data_is_untouched(app, data):
@@ -131,7 +150,7 @@ def test_switch_on_seeds_at_startup(make_app):
         assert Meeting.query.count() == 11
     client = app.test_client()
     with app.app_context():
-        viewer = User(email="viewer@soongsil.ac.kr", nickname="viewer", password_hash="x")
+        viewer = User(email="viewer@ssu.ac.kr", nickname="viewer", password_hash="x")
         db.session.add(viewer)
         db.session.commit()
         viewer_id = viewer.id

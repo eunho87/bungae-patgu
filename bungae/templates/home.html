@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "_macros.html" import meeting_card with context %}
 {% block title %}홈 · 번개팟구{% endblock %}
+{% block body_class %} page-home{% endblock %}
 {% block content %}
 <section class="hero">
   <p class="hero__hello">{{ user.nickname }}님, 반가워요 👋</p>
@@ -26,6 +27,9 @@
 <p class="hint-card">💡 관심사를 골라 두면 맞는 번개를 먼저 추천해 드려요. <a href="{{ url_for('meetings.me') }}#interests">내 모임에서 관심사 고르기</a></p>
 {% endif %}
 
+{# 넓은 화면에서는 찾기 조건을 왼쪽에 세워 두고 목록을 오른쪽에 두 줄로 보여 준다. 좁은 화면에서는 그대로 위아래로 쌓인다. #}
+<div class="home">
+<div class="home__side">
 <form class="filters" method="get" action="{{ url_for('discover.home') }}" data-autosubmit role="search" aria-label="모임 찾기">
   <div class="search">
     <label class="sr-only" for="q">검색어</label>
@@ -61,7 +65,7 @@
     </label>
   </div>
 
-  <details class="filters__more"{% if filters.day or filters.part or filters.sort != 'soon' %} open{% endif %}>
+  <details class="filters__more" data-open-wide{% if filters.day or filters.part or filters.sort != 'soon' %} open{% endif %}>
     <summary>날짜·시간대·정렬</summary>
     <div class="filters__body">
       <div class="field-grid">
@@ -100,7 +104,9 @@
   <p><a class="reset-link" href="{{ url_for('discover.home') }}">필터 초기화</a></p>
   {% endif %}
 </form>
+</div>
 
+<div class="home__main">
 {% if for_you %}
 <section class="section for-you" aria-labelledby="for-you-title">
   <div class="section__head">
@@ -141,4 +147,6 @@
   </div>
   {% endif %}
 </section>
+</div>
+</div>
 {% endblock %}

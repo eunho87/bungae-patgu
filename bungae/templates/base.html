@@ -22,7 +22,7 @@
       </a>
       {% if user %}
       <div class="topbar__right">
-        <span class="topbar__who">{{ user.nickname }}님</span>
+        <a class="topbar__who" href="{{ url_for('meetings.me') }}">{{ user.nickname }}님</a>
         <a class="bell" href="{{ url_for('account.notifications') }}" aria-label="알림{% if unread_notifications %}, 새 알림 {{ unread_notifications }}개{% endif %}">
           <span aria-hidden="true">🔔</span>
           {% if unread_notifications %}

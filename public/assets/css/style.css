@@ -1825,6 +1825,168 @@ body.page-chat .container {
   }
 }
 
+/* 마우스를 쓰는 기기에서는 옆으로 미는 칩 줄을 넘길 방법이 없다. 여러 줄로 접어 모두 보이게 한다. */
+@media (hover: hover) and (pointer: fine) {
+  .chip-scroll {
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+
+  /* 44px는 손가락 기준 크기다. 마우스로는 조금 작아도 누르기 쉽고 한 화면에 더 많이 보인다. */
+  .chip {
+    min-height: 38px;
+    padding: 0 14px;
+    font-size: 0.875rem;
+  }
+}
+
+/* PC 화면: 메뉴를 위로 올리고, 홈은 조건(왼쪽)과 목록(오른쪽 두 줄)으로 나눈다. */
+@media (min-width: 960px) {
+  :root {
+    --content-w: 720px;
+    --wide-w: 1080px;
+  }
+
+  .topbar__inner {
+    max-width: var(--wide-w);
+  }
+
+  .has-tabbar {
+    padding-bottom: 0;
+  }
+
+  .tabbar {
+    top: 0;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    z-index: 31;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    transform: translateX(-50%);
+  }
+
+  .tabbar__list {
+    display: flex;
+    align-items: center;
+    gap: var(--s1);
+    max-width: none;
+    height: var(--topbar-h);
+  }
+
+  .tab {
+    flex-direction: row;
+    gap: 6px;
+    height: 40px;
+    padding: 0 var(--s4);
+    border-radius: var(--radius-pill);
+    font-size: 0.9375rem;
+    white-space: nowrap;
+  }
+
+  .tab:hover {
+    background: var(--bg);
+  }
+
+  .tab__icon,
+  .tab.is-active .tab__icon,
+  .tab--create .tab__icon,
+  .tab--create.is-active .tab__icon {
+    width: auto;
+    height: auto;
+    background: none;
+    font-size: 1rem;
+  }
+
+  .tab.is-active {
+    background: var(--primary-soft);
+  }
+
+  .tab--create,
+  .tab--create:hover,
+  .tab--create.is-active {
+    margin-left: var(--s2);
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .tab--create:hover,
+  .tab--create.is-active {
+    background: var(--primary-dark);
+  }
+
+  .topbar__who {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .cta-bar {
+    bottom: var(--s4);
+  }
+
+  .page-home .container {
+    max-width: var(--wide-w);
+  }
+
+  .home {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--s6);
+    margin-top: var(--s5);
+  }
+
+  .home__side {
+    position: sticky;
+    top: calc(var(--topbar-h) + var(--s4));
+    /* 화면이 낮은 노트북에서도 조건 아래쪽까지 닿을 수 있게 한다. */
+    max-height: calc(100vh - var(--topbar-h) - var(--s8));
+    overflow-y: auto;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+
+  .page-home .card-list > li {
+    display: grid;
+  }
+
+  .page-home .filters {
+    margin-top: 0;
+    padding: var(--s4);
+    background: var(--card);
+  }
+
+  .page-home .filters .field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-home .filters__more {
+    border: 0;
+  }
+
+  .page-home .filters__more > summary {
+    min-height: 36px;
+    padding: 0;
+  }
+
+  .page-home .filters__body {
+    padding: var(--s2) 0 0;
+  }
+
+  .home__main > .section:first-child {
+    margin-top: 0;
+  }
+
+  .page-home .card-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

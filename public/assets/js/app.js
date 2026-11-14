@@ -35,6 +35,13 @@
     });
   });
 
+  // 넓은 화면에서는 접어 둘 이유가 없는 메뉴(홈의 날짜·시간대·정렬)를 펼쳐 둔다.
+  if (window.matchMedia && window.matchMedia("(min-width: 960px)").matches) {
+    document.querySelectorAll("details[data-open-wide]").forEach(function (details) {
+      details.open = true;
+    });
+  }
+
   // 오류 문구를 해당 입력란과 연결해 화면 낭독기가 함께 읽게 한다.
   document.querySelectorAll(".field__error[id]").forEach(function (error) {
     var field = error.closest(".field");

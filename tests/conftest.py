@@ -5,6 +5,7 @@
 - bungae.llm 안의 requests.post는 기본적으로 막아 둔다(실제 네트워크 호출 금지).
 """
 
+import smtplib
 from datetime import datetime, timedelta
 
 import pytest
@@ -29,6 +30,10 @@ BASE_CONFIG = {
     "OPENROUTER_MODEL": "test/model:free",
     "OPENROUTER_FALLBACK_MODELS": "none",
     "CHAT_AI_DAILY_LIMIT": 15,
+    # 로컬 .env에 메일 설정이 있어도 테스트에서는 이메일 인증을 끄고 메일을 보내지 않는다(인증 테스트는 따로 켠다).
+    "EMAIL_VERIFICATION": False,
+    "MAIL_USERNAME": "",
+    "MAIL_PASSWORD": "",
 }
 
 
@@ -83,6 +88,7 @@ def no_network(monkeypatch):
         raise AssertionError("테스트에서 실제 네트워크 호출이 일어났다")
 
     monkeypatch.setattr(llm.requests, "post", blocked)
+    monkeypatch.setattr(smtplib, "SMTP", blocked)
 
 
 @pytest.fixture

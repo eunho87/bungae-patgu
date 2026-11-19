@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}이메일 인증 · 번개팟구{% endblock %}
+{% block content %}
+<div class="auth">
+  <header class="page-head">
+    <h1 class="page-title">이메일 인증</h1>
+    <p class="page-sub"><strong>{{ email }}</strong>(으)로 보낸 6자리 코드를 입력하면 가입이 끝나요.</p>
+  </header>
+
+  <section class="panel">
+    {% if error %}
+    <p class="alert alert--error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form class="form" method="post" action="{{ url_for('auth.verify') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label class="field__label" for="code">인증 코드</label>
+        <input class="input input--code{% if error %} is-invalid{% endif %}" type="text" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" maxlength="7" placeholder="000000" required autofocus>
+        <p class="field__hint">코드는 10분 동안 쓸 수 있어요. 메일이 안 보이면 스팸함도 확인해 주세요.</p>
+      </div>
+      <button class="btn btn--primary btn--block" type="submit">인증하고 시작하기</button>
+    </form>
+    <form class="form-inline" method="post" action="{{ url_for('auth.verify_resend') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn--soft btn--block" type="submit">코드 다시 받기</button>
+    </form>
+  </section>
+
+  <p class="auth__switch small muted">주소를 잘못 적었다면 <a href="{{ url_for('auth.signup') }}">처음부터 다시 가입</a>하세요. 인증하지 않은 계정은 만들어지지 않은 것으로 처리돼요.</p>
+</div>
+{% endblock %}

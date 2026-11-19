@@ -57,18 +57,30 @@ def _secret_key(on_vercel):
     return path.read_text(encoding="utf-8").strip()
 
 
+def _add_missing_columns():
+    """이미 만들어진 테이블에 나중에 추가한 칸을 붙인다. create_all은 없는 테이블만 만들고 칸은 붙이지 않는다."""
+    columns = {column["name"] for column in inspect(db.engine).get_columns("users")}
+    if "email_verified" not in columns:
+        # 이 칸이 생기기 전에 가입한 사람은 인증된 것으로 본다.
+        default = "TRUE" if db.engine.dialect.name == "postgresql" else "1"
+        with db.engine.begin() as connection:
+            connection.exec_driver_sql(f"ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT {default}")
+
+
 def _ensure_tables(app, on_vercel):
     """테이블이 없으면 만든다.
 
     Vercel에서는 인스턴스가 새로 뜰 때마다 이 코드가 돈다. 매번 테이블 전체를 검사하면 느리고,
-    DB가 잠에서 깨는 중이면 인스턴스가 통째로 죽으므로 가장 나중에 추가한 테이블 하나만 확인한다.
+    DB가 잠에서 깨는 중이면 인스턴스가 통째로 죽으므로 가장 나중에 추가한 테이블과 칸만 확인한다.
     """
     if not on_vercel:
         db.create_all()
+        _add_missing_columns()
         return
     try:
-        if not inspect(db.engine).has_table("reports"):
+        if not inspect(db.engine).has_table("email_codes"):
             db.create_all()
+        _add_missing_columns()
     except SQLAlchemyError:
         app.logger.exception("테이블 확인 실패: DB 연결 설정을 확인하세요")
 
@@ -119,9 +131,19 @@ def create_app(test_config=None):
         OPENROUTER_FALLBACK_MODELS=os.environ.get("OPENROUTER_FALLBACK_MODELS", "").strip()
         or "recursive/flint-v1.0:free,baidu/ernie-5.5-flash-preview:free",
         CHAT_AI_DAILY_LIMIT=int(os.environ.get("CHAT_AI_DAILY_LIMIT") or 15),
+        # 메일 발송(Gmail 기준). 앱 비밀번호는 화면에 띄어쓰기를 넣어 보여 주므로 공백을 지운다.
+        MAIL_SMTP_HOST=os.environ.get("MAIL_SMTP_HOST", "").strip() or "smtp.gmail.com",
+        MAIL_SMTP_PORT=int(os.environ.get("MAIL_SMTP_PORT") or 587),
+        MAIL_USERNAME=os.environ.get("MAIL_USERNAME", "").strip(),
+        MAIL_PASSWORD="".join(os.environ.get("MAIL_PASSWORD", "").split()),
+        MAIL_FROM=os.environ.get("MAIL_FROM", "").strip(),
         EPHEMERAL_DB=False,
         SEED_DEMO=False,
     )
+    # 이메일 인증: 메일을 보낼 수 있게 설정했으면 켜진다. EMAIL_VERIFICATION=0이면 끄고,
+    # =1이면 메일 설정 없이도 켠다(코드는 서버 로그에 찍힌다. 로컬에서 흐름을 시험할 때 쓴다).
+    switch = os.environ.get("EMAIL_VERIFICATION", "").strip()
+    app.config["EMAIL_VERIFICATION"] = switch == "1" or (switch != "0" and bool(app.config["MAIL_USERNAME"] and app.config["MAIL_PASSWORD"]))
     if test_config:
         app.config.update(test_config)
     else:

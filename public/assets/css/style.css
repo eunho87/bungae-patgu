@@ -766,6 +766,19 @@ textarea {
   gap: var(--s5);
 }
 
+/* 같은 상자 안에서 주 양식 아래에 붙는 보조 버튼(코드 다시 받기 등) */
+.form-inline {
+  margin-top: var(--s3);
+}
+
+/* 인증 코드 칸: 숫자 6개가 한눈에 읽히도록 크게, 글자 사이를 띄운다. */
+.input--code {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
 .field {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

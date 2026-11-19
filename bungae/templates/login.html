@@ -31,7 +31,11 @@
   </section>
 
   <p class="auth__switch">처음이신가요? <a href="{{ url_for('auth.signup', next=next_url) }}">숭실대 이메일로 가입하기</a></p>
+  {% if config.EMAIL_VERIFICATION %}
+  <p class="auth__switch small"><a href="{{ url_for('auth.password_forgot') }}">비밀번호를 잊었나요?</a></p>
+  {% else %}
   <p class="auth__switch small muted">비밀번호 재설정 기능은 아직 없어요. 비밀번호를 잊었다면 운영하는 조에 알려 주세요.</p>
+  {% endif %}
   <p class="auth__switch small"><a href="{{ url_for('account.about') }}">이용 안내와 저장하는 정보</a></p>
 </div>
 {% endblock %}

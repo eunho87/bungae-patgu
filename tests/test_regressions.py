@@ -174,6 +174,7 @@ def test_schema_and_row_lock_compile_for_postgresql(app):
         tables = db.metadata.sorted_tables
         ddl = "\n".join(str(CreateTable(table).compile(dialect=dialect)) for table in tables)
         lock = str(select(Meeting).where(Meeting.id == 1).with_for_update(of=Meeting).compile(dialect=dialect))
-    assert len(tables) == 8
+    assert len(tables) == 9
     assert "ON DELETE SET NULL" in ddl  # 알림이 가리키는 모임이 지워질 때
+    assert "email_verified BOOLEAN DEFAULT true NOT NULL" in ddl  # 기존 가입자는 인증된 것으로
     assert lock.rstrip().endswith("FOR UPDATE OF meetings")

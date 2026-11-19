@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, true
 
 from . import db
 from .constants import CATEGORY_LABEL
@@ -16,6 +16,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     interests = db.Column(db.String(200), nullable=False, default="")
     created_at = db.Column(db.DateTime, nullable=False, default=now_utc)
+    # 학교 메일로 보낸 코드를 입력해 그 주소의 주인임을 확인했는지. 이 기능을 넣기 전에 가입한 계정은
+    # 확인된 것으로 본다(DB에 칸을 새로 붙일 때 기본값 TRUE).
+    email_verified = db.Column(db.Boolean, nullable=False, default=True, server_default=true())
 
     @property
     def interest_list(self):
@@ -204,6 +207,24 @@ class LoginThrottle(db.Model):
     email = db.Column(db.String(120), primary_key=True)
     fail_count = db.Column(db.Integer, nullable=False, default=0)
     locked_until = db.Column(db.DateTime)
+
+
+class EmailCode(db.Model):
+    """메일로 보낸 6자리 코드. 원래 숫자는 저장하지 않고 서버 비밀 키로 만든 해시만 둔다.
+
+    purpose는 'verify'(가입 확인) 또는 'reset'(비밀번호 재설정). 발송 간격과 시간당 횟수 제한도 이 행들로 센다.
+    """
+
+    __tablename__ = "email_codes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    purpose = db.Column(db.String(10), nullable=False)
+    code_hash = db.Column(db.String(64), nullable=False)
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    used = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=now_utc)
+    expires_at = db.Column(db.DateTime, nullable=False)
 
 
 class ChatUsage(db.Model):

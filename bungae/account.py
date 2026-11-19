@@ -3,7 +3,7 @@
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from . import db, notify
+from . import db, emailcode, notify
 from sqlalchemy.exc import IntegrityError
 
 from .auth import NICKNAME_RE, NICKNAME_RULE, login_required, nickname_taken
@@ -115,6 +115,7 @@ def delete_account():
     Notification.query.filter_by(actor_id=user.id).delete(synchronize_session=False)
     ChatUsage.query.filter_by(user_id=user.id).delete(synchronize_session=False)
     LoginThrottle.query.filter_by(email=user.email).delete(synchronize_session=False)
+    emailcode.forget(user.email)
     db.session.delete(user)
     db.session.commit()
 

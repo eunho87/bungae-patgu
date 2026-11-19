@@ -2067,6 +2067,289 @@ body.page-chat .container {
   }
 }
 
+/* 16. 밝은 테마 ------------------------------------------------------------
+   따뜻한 크림색 바탕, Pretendard 글꼴, 둥근 알약 모양 버튼과 메뉴, 옅은 그림자.
+   위의 구조는 그대로 두고 색·모양만 덮어쓴다. */
+:root {
+  --bg: #fdf6ec;
+  --card: #ffffff;
+  --line: #f0e6d8;
+  --line-strong: #d7ccbb;
+  --accent: #ffc94a;
+  --accent-dark: #f5b324;
+  --accent-soft: #fff3d6;
+  --ink: #1b1b1f;
+  --ink-soft: #3a3940;
+  --muted: #6e6a64;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --shadow: 0 1px 2px rgba(90, 60, 20, 0.04), 0 8px 24px rgba(120, 80, 20, 0.07);
+  --shadow-hover: 0 2px 4px rgba(90, 60, 20, 0.05), 0 14px 32px rgba(120, 80, 20, 0.12);
+  --shadow-cta: 0 10px 22px rgba(255, 180, 40, 0.35);
+  --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Malgun Gothic", "맑은 고딕", "Noto Sans KR", sans-serif;
+}
+
+body {
+  letter-spacing: -0.01em;
+}
+
+/* 상단 바: 크림색 반투명. PC에서는 아래 미디어 쿼리에서 떠 있는 알약 모양이 된다. */
+.topbar {
+  background: rgba(253, 246, 236, 0.88);
+  border-bottom: 1px solid rgba(90, 60, 20, 0.06);
+}
+
+.logo__mark {
+  border-radius: 11px;
+  box-shadow: 0 4px 10px rgba(255, 180, 40, 0.35);
+}
+
+/* 상자 */
+.panel,
+.mcard {
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.mcard {
+  transition: border-color 0.15s, box-shadow 0.2s, transform 0.2s;
+}
+
+.mcard:hover {
+  border-color: var(--line);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.page-title {
+  font-size: 1.625rem;
+  letter-spacing: -0.03em;
+}
+
+.section__title {
+  letter-spacing: -0.02em;
+}
+
+/* 버튼: 알약 모양. 주 버튼은 번개 노란색에 진한 글자, 옅은 노란 그림자. */
+.btn {
+  border-color: var(--line-strong);
+  border-radius: var(--radius-pill);
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-cta);
+  color: var(--ink);
+}
+
+.btn--primary:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+.btn--soft {
+  box-shadow: none;
+}
+
+.cta-bar {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.cta-bar .btn {
+  min-height: 54px;
+  font-size: 1.0625rem;
+}
+
+/* 칩: 고르면 진한 색으로 채운다(노란 버튼·보라 배지와 겹치지 않게). */
+.chip {
+  border-width: 1px;
+  border-color: var(--line-strong);
+}
+
+.chip:hover {
+  border-color: var(--ink-soft);
+}
+
+.chip[aria-pressed="true"],
+.chip-check input:checked + .chip {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+/* 입력란 */
+.input,
+.select,
+.textarea {
+  border-width: 1px;
+  border-color: var(--line-strong);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(255, 201, 74, 0.45);
+}
+
+/* 홈 머리말: 색 상자 대신 큰 글씨. 숫자에는 형광펜을 칠한다. */
+.hero {
+  padding: var(--s2) var(--s1) 0;
+  background: none;
+  color: var(--ink);
+}
+
+.hero__hello {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.hero__title {
+  margin-top: var(--s1);
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.hero__num {
+  color: inherit;
+  background: linear-gradient(transparent 58%, rgba(255, 201, 74, 0.7) 58%);
+  padding: 0 2px;
+}
+
+.soon-banner {
+  background: var(--card);
+  border: 1px solid #f6dcb3;
+  box-shadow: var(--shadow);
+}
+
+.hint-card {
+  background: var(--card);
+  border: 1px dashed var(--line-strong);
+}
+
+.for-you {
+  background: var(--accent-soft);
+  border: 1px solid #f8e3b5;
+}
+
+/* 로그인 화면 소개: 색 상자 대신 큰 글씨 */
+.auth__pitch {
+  padding: var(--s4) var(--s1) 0;
+  background: none;
+  color: var(--ink);
+}
+
+.auth__bolt {
+  box-shadow: var(--shadow-cta);
+}
+
+.auth__headline {
+  font-size: 1.75rem;
+  letter-spacing: -0.03em;
+}
+
+.auth__copy {
+  color: var(--muted);
+  opacity: 1;
+}
+
+/* 하단 탭(휴대폰) */
+.tabbar {
+  border-top-color: var(--line);
+}
+
+.tab--create .tab__icon {
+  background: var(--accent);
+  color: var(--ink);
+  box-shadow: 0 4px 12px rgba(255, 180, 40, 0.4);
+}
+
+.tab.is-active .tab__icon {
+  background: var(--accent-soft);
+}
+
+.tab.is-active {
+  color: var(--ink);
+}
+
+.tab--create.is-active .tab__icon {
+  background: var(--accent-dark);
+}
+
+/* 챗봇 */
+.msg--bot .bubble {
+  border: 1px solid var(--line);
+}
+
+.chat__foot {
+  background: rgba(253, 246, 236, 0.94);
+}
+
+@media (min-width: 960px) {
+  /* 상단 바가 화면 위에 떠 있는 흰 알약이 된다. */
+  .topbar {
+    padding: 12px var(--s4) 0;
+    background: linear-gradient(var(--bg) 60%, rgba(253, 246, 236, 0));
+    border-bottom: 0;
+    backdrop-filter: none;
+  }
+
+  .topbar__inner {
+    padding: 0 var(--s3) 0 var(--s5);
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow);
+  }
+
+  .tabbar {
+    top: 12px;
+  }
+
+  .tab:hover {
+    background: var(--bg);
+  }
+
+  .tab.is-active {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  .tab--create,
+  .tab--create:hover,
+  .tab--create.is-active {
+    background: var(--accent);
+    color: var(--ink);
+    box-shadow: 0 6px 14px rgba(255, 180, 40, 0.35);
+  }
+
+  .tab--create:hover,
+  .tab--create.is-active {
+    background: var(--accent-dark);
+  }
+
+  .home__side {
+    top: calc(var(--topbar-h) + 28px);
+    border: 1px solid var(--line);
+  }
+
+  .detail__side {
+    top: calc(var(--topbar-h) + 28px);
+  }
+
+  .hero__title {
+    font-size: 2rem;
+  }
+
+  .auth__headline {
+    font-size: 2.125rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

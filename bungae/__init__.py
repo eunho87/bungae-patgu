@@ -198,7 +198,9 @@ def create_app(test_config=None):
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault(
             "Content-Security-Policy",
-            "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
+            # 글꼴(Pretendard)만 jsDelivr에서 받는다. 스크립트는 여전히 이 사이트 것만 허용한다.
+            "default-src 'self'; img-src 'self' data:; style-src 'self' https://cdn.jsdelivr.net; "
+            "font-src 'self' https://cdn.jsdelivr.net; script-src 'self'; "
             "base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
         )
         return response

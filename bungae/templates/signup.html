@@ -20,8 +20,8 @@
 
       <div class="field">
         <label class="field__label" for="email">학교 이메일</label>
-        <input class="input{% if errors.get('email') %} is-invalid{% endif %}" type="email" id="email" name="email" value="{{ form.email }}" placeholder="학번@ssu.ac.kr" autocomplete="email" inputmode="email" maxlength="120" required aria-describedby="email-hint">
-        <p class="field__hint" id="email-hint">@ssu.ac.kr 이메일만 가입할 수 있어요.</p>
+        <input class="input{% if errors.get('email') %} is-invalid{% endif %}" type="email" id="email" name="email" value="{{ form.email }}" placeholder="학번@soongsil.ac.kr" autocomplete="email" inputmode="email" maxlength="120" required aria-describedby="email-hint">
+        <p class="field__hint" id="email-hint">@soongsil.ac.kr 이메일만 가입할 수 있어요.</p>
         {{ field_error(errors, 'email') }}
       </div>
 

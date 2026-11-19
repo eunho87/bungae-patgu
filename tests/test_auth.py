@@ -17,7 +17,7 @@ LOCK_ERROR = "로그인 시도가 너무 많아요"
 
 def signup(client, **over):
     form = {
-        "email": "newbie@ssu.ac.kr",
+        "email": "newbie@soongsil.ac.kr",
         "nickname": "새내기",
         "password": "password-123",
         "password_confirm": "password-123",
@@ -53,7 +53,7 @@ def test_signup_success_logs_in(app, client):
     assert response.status_code == 302
     assert path_of(response) == "/"
     with app.app_context():
-        user = User.query.filter_by(email="newbie@ssu.ac.kr").one()
+        user = User.query.filter_by(email="newbie@soongsil.ac.kr").one()
         assert session_user(client) == user.id
         assert user.nickname == "새내기"
         assert user.password_hash != "password-123"
@@ -64,9 +64,9 @@ def test_signup_success_logs_in(app, client):
 
 
 def test_signup_normalizes_email_case(app, client):
-    assert signup(client, email="  NewBie@SSU.AC.KR ").status_code == 302
+    assert signup(client, email="  NewBie@Soongsil.AC.KR ").status_code == 302
     with app.app_context():
-        assert User.query.one().email == "newbie@ssu.ac.kr"
+        assert User.query.one().email == "newbie@soongsil.ac.kr"
 
 
 @pytest.mark.needs_template
@@ -74,20 +74,20 @@ def test_signup_normalizes_email_case(app, client):
     "email",
     [
         "newbie@gmail.com",
-        "newbie@soongsil.ac.kr",
-        "newbie@ssu.ac.kr.evil.com",
-        "newbie@evil.com@ssu.ac.kr",
-        "newbie@sub.ssu.ac.kr",
-        "newbie@xssu.ac.kr",
-        "newbie@ssuXacXkr",
-        "@ssu.ac.kr",
-        "new bie@ssu.ac.kr",
-        "newbie@ssu.ac.kr\nx@evil.com",
+        "newbie@ssu.ac.kr",
+        "newbie@soongsil.ac.kr.evil.com",
+        "newbie@evil.com@soongsil.ac.kr",
+        "newbie@sub.soongsil.ac.kr",
+        "newbie@xsoongsil.ac.kr",
+        "newbie@soongsilXacXkr",
+        "@soongsil.ac.kr",
+        "new bie@soongsil.ac.kr",
+        "newbie@soongsil.ac.kr\nx@evil.com",
         "newbie",
         "",
     ],
 )
-def test_signup_rejects_non_ssu_email(app, client, rendered, email):
+def test_signup_rejects_non_soongsil_email(app, client, rendered, email):
     response = signup(client, email=email)
     assert response.status_code == 400
     assert "email" in rendered[-1][1]["errors"]
@@ -133,9 +133,9 @@ def test_signup_rejects_bad_nickname(app, client, rendered, nickname):
 
 
 @pytest.mark.needs_template
-@pytest.mark.parametrize("email", ["taken@ssu.ac.kr", "TAKEN@ssu.ac.kr"])
+@pytest.mark.parametrize("email", ["taken@soongsil.ac.kr", "TAKEN@soongsil.ac.kr"])
 def test_signup_rejects_duplicate_email(app, client, data, rendered, email):
-    data.user("기존회원", email="taken@ssu.ac.kr")
+    data.user("기존회원", email="taken@soongsil.ac.kr")
     response = signup(client, email=email)
     assert response.status_code == 400
     assert "email" in rendered[-1][1]["errors"]
@@ -146,7 +146,7 @@ def test_signup_rejects_duplicate_email(app, client, data, rendered, email):
 
 @pytest.mark.needs_template
 def test_signup_rejects_duplicate_nickname(app, client, data, rendered):
-    data.user("새내기", email="other@ssu.ac.kr")
+    data.user("새내기", email="other@soongsil.ac.kr")
     response = signup(client)
     assert response.status_code == 400
     assert "nickname" in rendered[-1][1]["errors"]
@@ -182,22 +182,22 @@ def test_logged_in_user_is_redirected_away_from_signup_and_login(client, data):
 
 def test_login_success(client, data):
     user_id = data.user("me")
-    response = login(client, "me@ssu.ac.kr", PASSWORD)
+    response = login(client, "me@soongsil.ac.kr", PASSWORD)
     assert response.status_code == 302 and path_of(response) == "/"
     assert session_user(client) == user_id
 
 
 def test_login_email_is_case_insensitive(client, data):
     user_id = data.user("me")
-    assert login(client, " ME@SSU.ac.kr ", PASSWORD).status_code == 302
+    assert login(client, " ME@Soongsil.ac.kr ", PASSWORD).status_code == 302
     assert session_user(client) == user_id
 
 
 @pytest.mark.needs_template
 def test_login_wrong_password_is_generic(client, data, rendered):
     data.user("me")
-    wrong = login(client, "me@ssu.ac.kr", "wrong-password")
-    unknown = login(client, "nobody@ssu.ac.kr", "wrong-password")
+    wrong = login(client, "me@soongsil.ac.kr", "wrong-password")
+    unknown = login(client, "nobody@soongsil.ac.kr", "wrong-password")
     assert wrong.status_code == unknown.status_code == 400
     assert session_user(client) is None
     assert GENERIC_LOGIN_ERROR in wrong.get_data(as_text=True)
@@ -208,7 +208,7 @@ def test_login_wrong_password_is_generic(client, data, rendered):
 
 
 @pytest.mark.needs_template
-@pytest.mark.parametrize("email, password", [("", ""), ("me@ssu.ac.kr", ""), ("", PASSWORD)])
+@pytest.mark.parametrize("email, password", [("", ""), ("me@soongsil.ac.kr", ""), ("", PASSWORD)])
 def test_login_empty_fields(client, data, email, password):
     data.user("me")
     assert login(client, email, password).status_code == 400
@@ -219,26 +219,26 @@ def test_login_empty_fields(client, data, email, password):
 def test_five_failures_lock_the_account_for_five_minutes(app, client, data):
     user_id = data.user("me")
     for _ in range(5):
-        response = login(client, "me@ssu.ac.kr", "wrong-password")
+        response = login(client, "me@soongsil.ac.kr", "wrong-password")
         assert response.status_code == 400
         assert GENERIC_LOGIN_ERROR in response.get_data(as_text=True)
 
     # 잠긴 동안에는 맞는 비밀번호도 거부된다.
-    locked = login(client, "me@ssu.ac.kr", PASSWORD)
+    locked = login(client, "me@soongsil.ac.kr", PASSWORD)
     assert locked.status_code == 400
     assert LOCK_ERROR in locked.get_data(as_text=True)
     assert session_user(client) is None
 
     timeutil.set_fixed_now(NOW_UTC + timedelta(minutes=4, seconds=59))
-    assert login(client, "me@ssu.ac.kr", PASSWORD).status_code == 400
+    assert login(client, "me@soongsil.ac.kr", PASSWORD).status_code == 400
     assert session_user(client) is None
 
     timeutil.set_fixed_now(NOW_UTC + timedelta(minutes=5, seconds=1))
-    unlocked = login(client, "me@ssu.ac.kr", PASSWORD)
+    unlocked = login(client, "me@soongsil.ac.kr", PASSWORD)
     assert unlocked.status_code == 302
     assert session_user(client) == user_id
     with app.app_context():
-        assert db.session.get(LoginThrottle, "me@ssu.ac.kr") is None
+        assert db.session.get(LoginThrottle, "me@soongsil.ac.kr") is None
 
 
 @pytest.mark.needs_template
@@ -247,11 +247,11 @@ def test_lock_applies_across_clients_and_is_per_email(app, data):
     other_id = data.user("other")
     attacker = app.test_client()
     for _ in range(5):
-        login(attacker, "me@ssu.ac.kr", "wrong-password")
+        login(attacker, "me@soongsil.ac.kr", "wrong-password")
     victim = app.test_client()
-    assert login(victim, "me@ssu.ac.kr", PASSWORD).status_code == 400
+    assert login(victim, "me@soongsil.ac.kr", PASSWORD).status_code == 400
     bystander = app.test_client()
-    assert login(bystander, "other@ssu.ac.kr", PASSWORD).status_code == 302
+    assert login(bystander, "other@soongsil.ac.kr", PASSWORD).status_code == 302
     assert session_user(bystander) == other_id
 
 
@@ -259,24 +259,24 @@ def test_lock_applies_across_clients_and_is_per_email(app, data):
 def test_four_failures_do_not_lock_and_success_resets_the_count(client, data, app):
     data.user("me")
     for _ in range(4):
-        login(client, "me@ssu.ac.kr", "wrong-password")
-    assert login(client, "me@ssu.ac.kr", PASSWORD).status_code == 302
+        login(client, "me@soongsil.ac.kr", "wrong-password")
+    assert login(client, "me@soongsil.ac.kr", PASSWORD).status_code == 302
     client.post("/logout")
     for _ in range(4):
-        login(client, "me@ssu.ac.kr", "wrong-password")
+        login(client, "me@soongsil.ac.kr", "wrong-password")
     # 연속 5회가 아니므로(4회 실패 -> 성공 -> 4회 실패) 잠기지 않는다.
-    assert login(client, "me@ssu.ac.kr", PASSWORD).status_code == 302
+    assert login(client, "me@soongsil.ac.kr", PASSWORD).status_code == 302
 
 
 @pytest.mark.needs_template
 def test_failures_after_a_lock_expires_start_a_new_count(client, data):
     user_id = data.user("me")
     for _ in range(5):
-        login(client, "me@ssu.ac.kr", "wrong-password")
+        login(client, "me@soongsil.ac.kr", "wrong-password")
     timeutil.set_fixed_now(NOW_UTC + timedelta(minutes=6))
     for _ in range(4):
-        assert GENERIC_LOGIN_ERROR in login(client, "me@ssu.ac.kr", "wrong-password").get_data(as_text=True)
-    assert login(client, "me@ssu.ac.kr", PASSWORD).status_code == 302
+        assert GENERIC_LOGIN_ERROR in login(client, "me@soongsil.ac.kr", "wrong-password").get_data(as_text=True)
+    assert login(client, "me@soongsil.ac.kr", PASSWORD).status_code == 302
     assert session_user(client) == user_id
 
 
@@ -284,12 +284,12 @@ def test_failures_after_a_lock_expires_start_a_new_count(client, data):
 def test_attempts_while_locked_do_not_extend_the_lock(client, data):
     data.user("me")
     for _ in range(5):
-        login(client, "me@ssu.ac.kr", "wrong-password")
+        login(client, "me@soongsil.ac.kr", "wrong-password")
     timeutil.set_fixed_now(NOW_UTC + timedelta(minutes=4))
     for _ in range(3):
-        login(client, "me@ssu.ac.kr", "wrong-password")
+        login(client, "me@soongsil.ac.kr", "wrong-password")
     timeutil.set_fixed_now(NOW_UTC + timedelta(minutes=5, seconds=1))
-    assert login(client, "me@ssu.ac.kr", PASSWORD).status_code == 302
+    assert login(client, "me@soongsil.ac.kr", PASSWORD).status_code == 302
 
 
 # ---------------------------------------------------------------------------
@@ -300,14 +300,14 @@ def test_attempts_while_locked_do_not_extend_the_lock(client, data):
 @pytest.mark.parametrize("target", ["/meetings/1", "/me", "/meetings/new?category=game&time=15:00", "/chat"])
 def test_next_accepts_local_paths(client, data, target):
     data.user("me")
-    response = login(client, "me@ssu.ac.kr", PASSWORD, next_url=target)
+    response = login(client, "me@soongsil.ac.kr", PASSWORD, next_url=target)
     assert response.status_code == 302
     assert response.headers["Location"] == target
 
 
 def test_next_is_read_from_the_query_string_too(client, data):
     data.user("me")
-    response = client.post("/login?next=/meetings/1", data={"email": "me@ssu.ac.kr", "password": PASSWORD})
+    response = client.post("/login?next=/meetings/1", data={"email": "me@soongsil.ac.kr", "password": PASSWORD})
     assert response.headers["Location"] == "/meetings/1"
 
 
@@ -331,7 +331,7 @@ def test_next_is_read_from_the_query_string_too(client, data):
 )
 def test_next_ignores_external_targets(client, data, target):
     data.user("me")
-    response = login(client, "me@ssu.ac.kr", PASSWORD, next_url=target)
+    response = login(client, "me@soongsil.ac.kr", PASSWORD, next_url=target)
     assert response.status_code == 302
     assert response.headers["Location"] == "/"
 
@@ -344,7 +344,7 @@ def test_next_with_backslash_stays_on_this_site(client, data, target):
     실제로는 사이트 안에 머문다. 헤더에 역슬래시가 그대로 나가지 않는지만 확인한다.
     """
     data.user("me")
-    location = login(client, "me@ssu.ac.kr", PASSWORD, next_url=target).headers["Location"]
+    location = login(client, "me@soongsil.ac.kr", PASSWORD, next_url=target).headers["Location"]
     assert location.startswith("/") and not location.startswith("//")
     assert "\\" not in location
     assert urlparse(location).netloc == ""
@@ -437,7 +437,7 @@ def test_login_replaces_previous_session_contents(client, data):
     with client.session_transaction() as sess:
         sess["chat_slots"] = {"categories": ["game"]}
     client.post("/logout")
-    login(client, "second@ssu.ac.kr", PASSWORD)
+    login(client, "second@soongsil.ac.kr", PASSWORD)
     with client.session_transaction() as sess:
         assert sess["user_id"] == second
         assert "chat_slots" not in sess
@@ -445,7 +445,7 @@ def test_login_replaces_previous_session_contents(client, data):
 
 def test_session_cookie_flags(client, data):
     data.user("me")
-    response = login(client, "me@ssu.ac.kr", PASSWORD)
+    response = login(client, "me@soongsil.ac.kr", PASSWORD)
     cookie = response.headers["Set-Cookie"]
     assert "HttpOnly" in cookie
     assert "SameSite=Lax" in cookie

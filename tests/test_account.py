@@ -280,10 +280,10 @@ def test_delete_account_scrubs_my_nickname_from_other_peoples_notifications(app,
 
 
 def test_password_change_logs_out_other_devices(app, data, client):
-    user = data.user(email="twodev@ssu.ac.kr")
+    user = data.user(email="twodev@soongsil.ac.kr")
     phone, laptop = app.test_client(), app.test_client()
     for device in (phone, laptop):
-        device.post("/login", data={"email": "twodev@ssu.ac.kr", "password": PASSWORD})
+        device.post("/login", data={"email": "twodev@soongsil.ac.kr", "password": PASSWORD})
         assert device.get("/me").status_code == 200
     phone.post("/me/password", data={"current_password": PASSWORD, "new_password": "brand-new-123", "new_password_confirm": "brand-new-123"})
     assert phone.get("/me").status_code == 200  # 바꾼 기기는 그대로
@@ -335,10 +335,10 @@ def test_signup_keeps_the_page_the_visitor_came_for(client, data):
     meeting = data.meeting(host)
     login_page = client.get(f"/meetings/{meeting}", follow_redirects=True).get_data(as_text=True)
     assert f"/signup?next=/meetings/{meeting}" in login_page.replace("%2F", "/")
-    form = {"email": "new@ssu.ac.kr", "nickname": "신입", "password": "password-123", "password_confirm": "password-123", "agree": "1", "next": f"/meetings/{meeting}"}
+    form = {"email": "new@soongsil.ac.kr", "nickname": "신입", "password": "password-123", "password_confirm": "password-123", "agree": "1", "next": f"/meetings/{meeting}"}
     response = client.post("/signup", data=form)
     assert response.headers["Location"].endswith(f"/meetings/{meeting}")
-    evil = client.application.test_client().post("/signup", data={**form, "email": "new2@ssu.ac.kr", "nickname": "신입2", "next": "https://evil.example"})
+    evil = client.application.test_client().post("/signup", data={**form, "email": "new2@soongsil.ac.kr", "nickname": "신입2", "next": "https://evil.example"})
     assert evil.headers["Location"].endswith("/")
 
 
@@ -354,7 +354,7 @@ def test_home_wording_when_only_my_own_meeting_exists(data, as_user):
 
 
 def test_signup_requires_consent(client, data):
-    form = {"email": "new@ssu.ac.kr", "nickname": "신입", "password": "password-123", "password_confirm": "password-123"}
+    form = {"email": "new@soongsil.ac.kr", "nickname": "신입", "password": "password-123", "password_confirm": "password-123"}
     assert client.post("/signup", data=form).status_code == 400
     assert data.count(User) == 0
     assert client.post("/signup", data={**form, "agree": "1"}).status_code == 302

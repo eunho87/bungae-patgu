@@ -18,14 +18,14 @@ from .models import Comment, Meeting, Notification, Participation, User
 from .timeutil import from_kst, now_kst, now_utc
 
 DEMO_USERS = [
-    ("demo1@ssu.ac.kr", "번개장인", "game,meal"),
-    ("demo2@ssu.ac.kr", "도서관지박령", "study,cafe"),
-    ("demo3@ssu.ac.kr", "풋살왕", "sports,drink"),
-    ("demo4@ssu.ac.kr", "고학번선배", "meal,culture"),
-    ("demo5@ssu.ac.kr", "새내기", "cafe,game"),
+    ("demo1@soongsil.ac.kr", "번개장인", "game,meal"),
+    ("demo2@soongsil.ac.kr", "도서관지박령", "study,cafe"),
+    ("demo3@soongsil.ac.kr", "풋살왕", "sports,drink"),
+    ("demo4@soongsil.ac.kr", "고학번선배", "meal,culture"),
+    ("demo5@soongsil.ac.kr", "새내기", "cafe,game"),
 ]
-# 가입 주소를 @ssu.ac.kr 로 바꾸기 전에 만든 데모 계정의 주소. 이미 있는 DB에서는 이 주소의 계정을 그대로 이어 쓴다.
-LEGACY_DOMAIN = "@soongsil.ac.kr"
+# 가입 주소가 잠시 @ssu.ac.kr 였던 동안 만들어진 데모 계정의 주소. 이미 있는 DB에서는 이 주소의 계정을 그대로 이어 쓴다.
+LEGACY_DOMAIN = "@ssu.ac.kr"
 MIN_UPCOMING = 3  # 앞으로 열릴 예시 모임이 이보다 적으면 새로 채운다
 ADVISORY_LOCK_ID = 74120261  # 여러 서버 인스턴스가 동시에 채우지 않게 하는 잠금 번호(임의의 고정 값)
 

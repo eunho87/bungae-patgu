@@ -28,7 +28,7 @@ def main():
         password = args.password or secrets.token_urlsafe(9)
         users, created_users = ensure_users(password)
         if created_users:
-            print(f"데모 계정을 만들었습니다: demo1~demo5@ssu.ac.kr / 비밀번호 {password}")
+            print(f"데모 계정을 만들었습니다: demo1~demo5@soongsil.ac.kr / 비밀번호 {password}")
             print("이 비밀번호는 다시 볼 수 없으니 적어 두세요. 공개 배포에서는 시연이 끝나면 계정을 지우는 것이 좋습니다.")
         elif args.password:
             for user in users:

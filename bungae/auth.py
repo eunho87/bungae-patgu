@@ -15,7 +15,7 @@ from .timeutil import now_utc
 
 bp = Blueprint("auth", __name__)
 
-EMAIL_RE = re.compile(r"^[a-z0-9._%+-]{1,64}@ssu\.ac\.kr$")
+EMAIL_RE = re.compile(r"^[a-z0-9._%+-]{1,64}@soongsil\.ac\.kr$")
 NICKNAME_RE = re.compile(r"^[0-9A-Za-z가-힣_]{2,12}$")
 NICKNAME_RULE = "닉네임은 한글·영문·숫자·밑줄(_) 2~12자로 정해 주세요."
 MAX_LOGIN_FAILS = 5
@@ -93,7 +93,7 @@ def signup():
         if not agree:
             errors["agree"] = "이용 안내를 확인하고 동의해 주세요."
         if not EMAIL_RE.match(email):
-            errors["email"] = "숭실대학교 이메일(@ssu.ac.kr)만 가입할 수 있어요."
+            errors["email"] = "숭실대학교 이메일(@soongsil.ac.kr)만 가입할 수 있어요."
         if not NICKNAME_RE.match(nickname):
             errors["nickname"] = NICKNAME_RULE
         if not 8 <= len(password) <= 64:

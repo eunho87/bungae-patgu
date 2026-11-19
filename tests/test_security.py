@@ -49,7 +49,7 @@ def csrf(csrf_app):
     return client, data, host, meeting, me
 
 
-def issue_token(app, client):
+def isoongsile_token(app, client):
     """Flask-WTF가 만드는 것과 같은 방식으로 세션에 묶인 토큰을 만든다."""
     with client.session_transaction() as sess:
         sess["csrf_token"] = "0123456789abcdef0123456789abcdef01234567"
@@ -86,8 +86,8 @@ def test_api_chat_without_token_is_400(csrf):
         ("/me/interests", {"interests": "game"}),
         ("/logout", {}),
         ("/api/chat/reset", {}),
-        ("/login", {"email": "me@ssu.ac.kr", "password": "x"}),
-        ("/signup", {"email": "x@ssu.ac.kr"}),
+        ("/login", {"email": "me@soongsil.ac.kr", "password": "x"}),
+        ("/signup", {"email": "x@soongsil.ac.kr"}),
     ],
 )
 def test_every_post_requires_a_token(csrf, path, payload):
@@ -114,21 +114,21 @@ def test_token_from_another_session_is_rejected(csrf_app, csrf):
     client, data, host, meeting, me = csrf
     other = csrf_app.test_client()
     login_as(other, host)
-    stolen = issue_token(csrf_app, other)
+    stolen = isoongsile_token(csrf_app, other)
     assert client.post(f"/meetings/{meeting}/join", data={"csrf_token": stolen}).status_code == 400
     assert data.member_ids(meeting) == [host]
 
 
 def test_valid_form_token_is_accepted(csrf_app, csrf):
     client, data, host, meeting, me = csrf
-    token = issue_token(csrf_app, client)
+    token = isoongsile_token(csrf_app, client)
     assert client.post(f"/meetings/{meeting}/join", data={"csrf_token": token}).status_code == 302
     assert data.member_ids(meeting) == [host, me]
 
 
 def test_valid_header_token_is_accepted_by_the_api(csrf_app, csrf):
     client, _, _, _, _ = csrf
-    token = issue_token(csrf_app, client)
+    token = isoongsile_token(csrf_app, client)
     response = client.post("/api/chat", json={"message": "보드게임 할 사람"}, headers={"X-CSRFToken": token})
     assert response.status_code == 200
     assert response.get_json()["mode"] == "rule"
